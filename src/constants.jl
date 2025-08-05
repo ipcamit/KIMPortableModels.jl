@@ -98,7 +98,7 @@ end
 Get length unit constant from string name ("A", "Bohr", "cm", "m", "nm")
 """
 function get_length_unit(name::String)
-    @ccall libkim.KIM_LengthUnit_FromString(name_::Cstring)::Cint
+    @ccall libkim.KIM_LengthUnit_FromString(name::Cstring)::Cint
 end
 
 """
