@@ -1,0 +1,15 @@
+name = "KIM"
+authors = ["Amit Gupta <gupta839@umn.edu>"]
+version = "0.1.0"
+uuid = "77fb50fe-d0f2-4096-8098-77bb80f69f63"
+
+[deps]
+Clang = "40e3b903"
+NeighbourLists = "2fcf5ba9"
+StaticArrays = "90137ffa"
+
+[compat]
+Clang = "0.18.3"
+NeighbourLists = "0.5.10"
+StaticArrays = "1.9.14"
+julia = "1.10"
