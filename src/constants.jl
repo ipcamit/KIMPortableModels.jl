@@ -72,12 +72,28 @@ end
 
 # Unit style combinations
 const UNIT_STYLES = (
-    metal = (numbering=zeroBased, length=A, energy=eV, charge=e, temperature=K, time=ps),
-    real = (numbering=zeroBased, length=A, energy=kcal_mol, charge=e, temperature=K, time=fs),
-    si = (numbering=zeroBased, length=m, energy=J, charge=C, temperature=K, time=s),
-    cgs = (numbering=zeroBased, length=cm, energy=erg, charge=statC, temperature=K, time=s),
-    electron = (numbering=zeroBased, length=Bohr, energy=Hartree, charge=e, temperature=K, time=fs)
+    metal =    (length=A, energy=eV, charge=e, temperature=K, time=ps),
+    real =     (length=A, energy=kcal_mol, charge=e, temperature=K, time=fs),
+    si =       (length=m, energy=J, charge=C, temperature=K, time=s),
+    cgs =      (length=cm, energy=erg, charge=statC, temperature=K, time=s),
+    electron = (length=Bohr, energy=Hartree, charge=e, temperature=K, time=fs)
 )
+
+function get_lammps_style_units(units::Symbol)
+    if units == :metal
+        return UNIT_STYLES.metal
+    elseif units == :real
+        return UNIT_STYLES.real
+    elseif units == :si
+        return UNIT_STYLES.si
+    elseif units == :cgs
+        return UNIT_STYLES.cgs
+    elseif units == :electron
+        return UNIT_STYLES.electron
+    else
+        error("Unknown LAMMPS style: $units")
+    end
+end
 
 ##############################################################################################
 # Lookup functions to get constants from strings and vice versa
@@ -173,16 +189,6 @@ function get_support_status(name::String)
     @ccall libkim.KIM_SupportStatus_FromString(name::Cstring)::Cint
 end
 
-"""
-    get_species_name(name::String) -> Cint
-
-Get species name constant from string (e.g., "Ar", "Si", etc.)
-"""
-function get_species_name(name::String)
-    @ccall libkim.KIM_SpeciesName_FromString(name::Cstring)::Cint
-end
-
-
 # Reverse lookup functions (get string from integer)
 """
     numbering_to_string(value::Cint) -> String
@@ -234,6 +240,5 @@ export Numbering, LengthUnit, EnergyUnit, ChargeUnit,
 export get_numbering, get_length_unit, get_energy_unit, get_charge_unit,
        get_temperature_unit, get_time_unit, get_compute_argument_name,
        get_compute_callback_name, get_language_name, get_support_status,
-       get_species_name,
        numbering_to_string, length_unit_to_string, energy_unit_to_string,
        compute_argument_name_to_string
