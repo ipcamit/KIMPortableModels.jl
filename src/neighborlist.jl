@@ -1,89 +1,130 @@
+"""
+Minimal KIM-API neighbor list module using NeighbourLists.jl
+"""
+module KIMNeighborLists
+
 using NeighbourLists
-# TODO: Provide other nl backends too
 using StaticArrays
 
+export create_kim_neighborlists, kim_neighbors_callback
 
-"""
-Object to contain the closure for neighbor list computation.
-This is used to encapsulate the logic for neighbor list generation
-in a way that can be passed to KIM.
-This allows for a flexible interface where the user can pass their own 
-neighbor list generation logic without needing to modify the KIM interface.
-"""
+# Container for neighbor list data
 mutable struct NeighborListContainer
-    get_neighbors::Function  # The closure function
-    neighbor_storage::Vector{Int32}  # Persistent storage for KIM
-    
-    function NeighborListContainer(get_neighbors_fn)
-        new(get_neighbors_fn, Vector{Int32}())
-    end
+    neighbors::Vector{Vector{Int32}}  # Pre-computed neighbors for each atom
+    temp_storage::Vector{Int32}      # Reusable storage for current query
 end
 
 """
-Example wrapper function to register a neighbor list closure with KIM.
-When supporting new simulators, this is the function that should be modified/
-provided to KIM.
-TODO: Provide more examples.
+    create_kim_neighborlists(positions, cutoffs, species; cell=nothing, pbc=[true,true,true])
+
+Create neighbor lists for KIM-API with ghost atoms for PBC.
+
+Returns: (containers, all_positions, all_species, contributing, atom_indices)
+- containers: Neighbor list data for each cutoff
+- all_positions: Positions including ghost atoms  
+- all_species: Species including ghost atoms
+- contributing: 1 for real atoms, 0 for ghosts
+- atom_indices: Original atom index for each position
+
+
+TODO: Handle will_not_request_ghost_neigh logic, I just need to compute neighbors for ghost atoms as well.
 """
-function kim_neighbors_function(
-    dataObject::Ptr{Cvoid},
-    numberOfNeighborLists::Cint,
-    cutoffs::Ptr{Cdouble},
-    neighborListIndex::Cint,
-    particleNumber::Cint,
-    numberOfNeighbors::Ptr{Cint},
-    neighborsOfParticle::Ptr{Ptr{Cint}}
-)::Cint
-    try
-        nl_closure_list = unsafe_pointer_to_objref(dataObject)::Vector{NeighborListContainer}
-        nl_closure = nl_closure_list[neighborListIndex + 1] # TODO: Let KIM-API handle this
-        # return error if neighborListIndex is improper
-        if neighborListIndex < 0 || neighborListIndex >= numberOfNeighborLists
-            return Cint(1)
+function create_kim_neighborlists(
+    positions::Vector{SVector{3,Float64}}, 
+    cutoffs::Vector{Float64},
+    species::Vector{String};
+    cell::Union{Matrix{Float64},Nothing}=nothing,
+    pbc::Vector{Bool}=[true,true,true],
+    will_not_request_ghost_neigh::Bool=false
+)
+    any(pbc) && isnothing(cell) && error("Need cell for periodic boundaries")
+    
+    max_cutoff = maximum(cutoffs)
+    pl = PairList(positions, max_cutoff, cell, pbc)
+    
+    all_positions = copy(positions)
+    atom_indices = collect(Int32, 1:length(positions))
+    n_real = length(positions)
+    ghost_idx = n_real
+    ghost_atom_ids = copy(pl.j)
+
+    # Add ghost atoms
+    for i in 1:n_real
+        for j in pl.first[i]:pl.first[i+1]-1
+            if !iszero(pl.S[j])
+                ghost_pos = positions[pl.j[j]] + cell * pl.S[j]
+                push!(all_positions, ghost_pos)
+                push!(atom_indices, pl.j[j])
+                ghost_idx += 1
+                ghost_atom_ids[j] = ghost_idx
+            end
+        end
+    end
+    
+    all_species = species[atom_indices]
+    contributing = vcat(ones(Cint, n_real), zeros(Cint, length(all_positions) - n_real))
+ 
+    # Create containers for each cutoff
+    containers = NeighborListContainer[]
+    
+    for cutoff in cutoffs
+        pl_cut = PairList(all_positions, cutoff, cell, [false, false, false])
+        
+        all_neighbors = Vector{Vector{Int32}}()
+        for i in 1:n_real
+            neighbors = pl_cut.j[pl_cut.first[i]:pl_cut.first[i+1]-1]
+            push!(all_neighbors, neighbors)
         end
         
-        neighbors = nl_closure.get_neighbors(particleNumber + 1)
-                
-        # Convert to 0-based Int32 for KIM, TODO: Handle this in KIM-API
-        nl_closure.neighbor_storage = Int32.(neighbors .- 1)
+        # Add empty lists for ghost atoms
+        for i in (n_real+1):length(all_positions)
+            push!(all_neighbors, Int32[])
+        end
+        
+        push!(containers, NeighborListContainer(all_neighbors, Int32[]))
+    end
+        
+    return containers, all_positions, all_species, contributing, atom_indices
+end
+
+"""
+    kim_neighbors_callback(...)
+
+KIM-API callback for neighbor queries. All indices are 0-based from KIM.
+"""
+function kim_neighbors_callback(
+    data_ptr::Ptr{Cvoid},
+    n_lists::Cint,
+    cutoffs::Ptr{Cdouble},
+    list_idx::Cint,
+    particle_idx::Cint,
+    n_neighbors_ptr::Ptr{Cint},
+    neighbors_ptr::Ptr{Ptr{Cint}}
+)::Cint
+    try
+        containers = unsafe_pointer_to_objref(data_ptr)::Vector{NeighborListContainer}
+        
+        # Bounds check
+        (list_idx < 0 || list_idx >= n_lists) && return Cint(1)
+        
+        # Get container (convert to 1-based)
+        container = containers[list_idx + 1]
+        
+        # Get pre-computed neighbors (convert particle index to 1-based)
+        neighbors = container.neighbors[particle_idx + 1]
+        
+        # Copy to temp storage and convert to 0-based for KIM
+        resize!(container.temp_storage, length(neighbors))
+        container.temp_storage .= neighbors .- 1
         
         # Set outputs
-        unsafe_store!(numberOfNeighbors, length(neighbors))
-        unsafe_store!(neighborsOfParticle, pointer(nl_closure.neighbor_storage))
+        unsafe_store!(n_neighbors_ptr, length(neighbors))
+        unsafe_store!(neighbors_ptr, pointer(container.temp_storage))
         
         return Cint(0)
-    catch e
-        @error "Error in kim_neighbors_from_closure" exception=e
+    catch
         return Cint(1)
     end
 end
 
-
-"""
-    create_neighborlist_closure(positions::Vector{SVector{3, Float64}}, cutoff::Float64, cell::Matrix{Float64}, pbc::Vector{Bool}) -> Function
-"""
-
-function create_neighborlist_closure(positions::Vector{SVector{3, Float64}}, cutoff::Float64, cell::Matrix{Float64}=nothing, pbc::Vector{Bool}=[true, true, true])
-    if isnothing(cell) && any(pbc)
-        throw(ArgumentError("Cell must be provided if PBC is true"))
-    end
-    pl = PairList(positions, cutoff, cell, pbc)
-    function get_neighbors(particle_idx::Int)
-        nl, _ = neigs(pl, particle_idx)
-        return nl
-    end
-    
-    return get_neighbors
-end
-
-"""
-List of NL containers to be passed to KIM.
-"""
-function create_kim_neighborlist_dataobject(positions::Vector{SVector{3, Float64}}, cutoffs::Vector{Float64}, cell::Matrix{Float64}=nothing, pbc::Vector{Bool}=[true, true, true])
-    nl_container = Vector{NeighborListContainer}()
-    for cutoff in cutoffs
-        get_neighbors_fn = create_neighborlist_closure(positions, cutoff, cell, pbc)
-        push!(nl_container, NeighborListContainer(get_neighbors_fn))
-    end
-    return nl_container
-end
+end # module

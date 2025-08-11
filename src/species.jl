@@ -123,11 +123,9 @@ function get_supported_species_map(model::Model)
         species_name = get_species_number(species_str)
         supported, code = get_species_support_and_code(model, species_name)
         
-        if !supported
-            error("Species '$species_str' not supported by model")
+        if supported
+            species_map[species_str] = code
         end
-        
-        species_map[species_str] = code
     end
     
     return species_map
@@ -167,7 +165,7 @@ function get_species_support_and_code(model::Model, species::Cint)
         model.p::Ptr{Cvoid}, species::Cint, 
         supported::Ptr{Cint}, code::Ptr{Cint})::Cint
     if species_name_unknown != 0
-        error("Species name $species not found in model")
+        error("Species name $species not found")
     end
     return Bool(supported[]), code[]
 end

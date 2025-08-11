@@ -1,9 +1,5 @@
 # model.jl - KIM-API model initialization
 
-###############################################################################################
-# Model Creation and Destruction
-###############################################################################################
-
 include("constants.jl")
 
 
@@ -66,9 +62,6 @@ function destroy_model!(model::Model)
 end
 
 
-###############################################################################################
-# Compute Arguments
-###############################################################################################
 
 """
     create_compute_arguments(model::Model) -> ComputeArguments
@@ -78,13 +71,16 @@ Create compute arguments for the model.
 function create_compute_arguments(model::Model)
     args = ComputeArguments()
     
+    args_ptr = Ref{Ptr{Cvoid}}(C_NULL)
     error_code = @ccall libkim.KIM_Model_ComputeArgumentsCreate(
-        model.p::Ptr{Cvoid}, Ref(args.p)::Ptr{Ptr{Cvoid}})::Cint
+        model.p::Ptr{Cvoid}, args_ptr::Ptr{Ptr{Cvoid}})::Cint
     
     if error_code != 0
         error("ComputeArguments creation failed with error code: $error_code")
     end
     
+    args.p = args_ptr[]
+
     return args
 end
 
@@ -102,9 +98,6 @@ function destroy_compute_arguments!(model::Model, args::ComputeArguments)
 end
 
 
-###############################################################################################
-# Model Properties
-###############################################################################################
 
 """
     get_influence_distance(model::Model) -> Float64
@@ -137,13 +130,9 @@ function get_neighbor_list_pointers(model::Model)
     cutoffs = unsafe_wrap(Array, cutoffs_ptr[], n)
     will_not_request = unsafe_wrap(Array, will_not_request_ptr[], n)
     
-    return n, cutoffs, will_not_request
+    return n, cutoffs, Bool(will_not_request[1])
 end
 
-
-###############################################################################################
-# Compute Arguments Support
-###############################################################################################
 
 """
     get_argument_support_status(args::ComputeArguments, arg_name::ComputeArgumentName) -> SupportStatus
@@ -160,9 +149,6 @@ function get_argument_support_status(args::ComputeArguments, arg_name::ComputeAr
 end
 
 
-###############################################################################################
-# Setting Argument Pointers
-###############################################################################################
 
 """
     set_argument_pointer!(args::ComputeArguments, arg_name::ComputeArgumentName, ptr)
@@ -197,9 +183,6 @@ function set_argument_pointer!(args::ComputeArguments,
 end
 
 
-###############################################################################################
-# Model Computation
-###############################################################################################
 
 """
     compute!(model::Model, args::ComputeArguments)
@@ -215,9 +198,23 @@ function compute!(model::Model, args::ComputeArguments)
     end
 end
 
-###############################################################################################
-# Model Parameters
-###############################################################################################
+"""
+    set_callback_pointer!(args::ComputeArguments, callback::ComputeCallbackName,
+                         language::LanguageName, func_ptr, data_ptr)
+
+Set a callback function pointer.
+"""
+function set_callback_pointer!(args::ComputeArguments, callback::ComputeCallbackName,
+                              language::LanguageName, func_ptr::Ptr{Cvoid}, 
+                              data_ptr::Ptr{Cvoid})
+    error_code = @ccall libkim.KIM_ComputeArguments_SetCallbackPointer(
+        args.p::Ptr{Cvoid}, callback::Cint, language::Cint,
+        func_ptr::Ptr{Cvoid}, data_ptr::Ptr{Cvoid})::Cint
+    
+    if error_code != 0
+        error("SetCallbackPointer failed for $(callback)")
+    end
+end
 
 # Export all types and functions
 export Model, ComputeArguments, ModelRoutineName, DataType
@@ -225,5 +222,5 @@ export create_model, destroy_model!, set_log_id!
 export create_compute_arguments, destroy_compute_arguments!
 export get_influence_distance, get_neighbor_list_pointers
 export get_argument_support_status
-export set_argument_pointer!
+export set_argument_pointer!, set_callback_pointer!
 export compute!
