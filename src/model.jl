@@ -1,8 +1,5 @@
 # model.jl - KIM-API model initialization
 
-include("constants.jl")
-
-
 mutable struct Model
     p::Ptr{Cvoid}
     Model() = new(C_NULL)

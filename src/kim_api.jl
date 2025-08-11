@@ -12,10 +12,21 @@ results = model(species, positions, cell, pbc)
 ```
 """
 module kim_api
-include("libkim.jl")
-include("constants.jl") 
-include("model.jl")
-include("species.jl")
-include("neighborlist.jl")
-include("highlevel.jl")
+using CEnum
+using StaticArrays
+using NeighbourLists
+using Libdl
+
+include("libkim.jl") # Load the KIM API library
+
+include("constants.jl") # Default enumerations in kim-api
+
+include("model.jl") # functions for model creation and destruction
+                    # also includes ComputeArguments stuff for now
+
+include("species.jl") # All the species related functions
+
+include("neighborlist.jl") # Functions for creating neighbor lists
+
+include("highlevel.jl") # Actual high-level API for model computation
 end

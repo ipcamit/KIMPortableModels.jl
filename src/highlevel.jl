@@ -1,10 +1,4 @@
 # highlevel.jl
-include("libkim.jl")
-include("constants.jl")
-include("model.jl")
-include("species.jl")
-include("neighborlist.jl")
-
 
 """
     KIMModel(model_name::String; units=UNIT_STYLES.metal, 

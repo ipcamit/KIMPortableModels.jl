@@ -1,7 +1,4 @@
 # species.jl
-include("libkim.jl")
-include("model.jl")
-
 const SpeciesName = Cint
 
 const SpeciesSymbols::Tuple = ( "electron", "H", "He", "Li", "Be", "B", "C", "N", 

@@ -1,12 +1,6 @@
 """
 Minimal KIM-API neighbor list module using NeighbourLists.jl
 """
-module KIMNeighborLists
-
-using NeighbourLists
-using StaticArrays
-
-export create_kim_neighborlists, kim_neighbors_callback
 
 # Container for neighbor list data
 mutable struct NeighborListContainer
@@ -15,10 +9,10 @@ mutable struct NeighborListContainer
 end
 
 """
-    create_kim_neighborlists(positions, cutoffs, species; cell=nothing, pbc=[true,true,true])
+create_kim_neighborlists(positions, cutoffs, species; cell=nothing, pbc=[true,true,true])
 
 Create neighbor lists for KIM-API with ghost atoms for PBC.
-
+    
 Returns: (containers, all_positions, all_species, contributing, atom_indices)
 - containers: Neighbor list data for each cutoff
 - all_positions: Positions including ghost atoms  
@@ -36,7 +30,7 @@ function create_kim_neighborlists(
     cell::Union{Matrix{Float64},Nothing}=nothing,
     pbc::Vector{Bool}=[true,true,true],
     will_not_request_ghost_neigh::Bool=false
-)
+    )
     any(pbc) && isnothing(cell) && error("Need cell for periodic boundaries")
     
     max_cutoff = maximum(cutoffs)
@@ -47,7 +41,7 @@ function create_kim_neighborlists(
     n_real = length(positions)
     ghost_idx = n_real
     ghost_atom_ids = copy(pl.j)
-
+    
     # Add ghost atoms
     for i in 1:n_real
         for j in pl.first[i]:pl.first[i+1]-1
@@ -63,7 +57,7 @@ function create_kim_neighborlists(
     
     all_species = species[atom_indices]
     contributing = vcat(ones(Cint, n_real), zeros(Cint, length(all_positions) - n_real))
- 
+    
     # Create containers for each cutoff
     containers = NeighborListContainer[]
     
@@ -83,12 +77,12 @@ function create_kim_neighborlists(
         
         push!(containers, NeighborListContainer(all_neighbors, Int32[]))
     end
-        
+    
     return containers, all_positions, all_species, contributing, atom_indices
 end
 
 """
-    kim_neighbors_callback(...)
+kim_neighbors_callback(...)
 
 KIM-API callback for neighbor queries. All indices are 0-based from KIM.
 """
@@ -100,7 +94,7 @@ function kim_neighbors_callback(
     particle_idx::Cint,
     n_neighbors_ptr::Ptr{Cint},
     neighbors_ptr::Ptr{Ptr{Cint}}
-)::Cint
+    )::Cint
     try
         containers = unsafe_pointer_to_objref(data_ptr)::Vector{NeighborListContainer}
         
@@ -126,5 +120,5 @@ function kim_neighbors_callback(
         return Cint(1)
     end
 end
-
-end # module
+    
+export create_kim_neighborlists, kim_neighbors_callback

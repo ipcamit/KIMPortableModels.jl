@@ -1,5 +1,4 @@
 # libkim.jl
-using Libdl
 
 # Try to find library automatically
 _libkim = get(ENV, "KIM_API_LIB", find_library(["kim-api", "libkim-api"]))
