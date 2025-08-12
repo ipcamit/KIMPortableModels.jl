@@ -66,35 +66,40 @@ function KIMModel(model_name::String;
     cutoffs = Float64[]
     will_not_request_ghost_neigh = Int32[]
     
-    if neighbor_function !== nothing
+    if neighbor_function === nothing
+        # default neighbor function
         n_cutoffs, cutoffs, will_not_request_ghost_neigh = get_neighbor_list_pointers(model)
+        println("Model needs $n_cutoffs neighbor lists with cutoffs: $cutoffs")
+    else
+        error("TODO: Handle custom neighbor function")
     end
 
-    species_support_map = get_species_map_closure(model)
     
+    species_support_map = get_species_map_closure(model)
+
     # Return closure
     return function _compute_model(species, positions, cell, pbc)
         # Create neighbor lists if needed
-        if neighbor_function !== nothing
+        if neighbor_function === nothing
             containers, all_positions, all_species, contributing, atom_indices = 
                 create_kim_neighborlists(positions, cutoffs, species;
                 cell=cell, pbc=pbc, 
                 will_not_request_ghost_neigh=will_not_request_ghost_neigh)
+            println("Created neighbor lists with $(all_positions) total positions including ghosts. $(containers)")
         else
-            # No neighbor lists - use positions directly
-            all_positions = positions
-            all_species = species
-            contributing = ones(Cint, length(positions))
-            containers = nothing
+            error("TODO: Neighbor function is not provided.")
         end
         
         particle_species_codes = species_support_map(all_species)
-        n = size(all_positions, 2)
         # Set pointers
+        
+        coords = reduce(hcat, all_positions) # Vector{SVector} to Matrix{Cdouble/Float64}
+        n = size(coords, 2)
+
         n_ref = Ref{Cint}(n)
         set_argument_pointer!(args, numberOfParticles, n_ref)
         set_argument_pointer!(args, particleSpeciesCodes, particle_species_codes)
-        set_argument_pointer!(args, coordinates, all_positions)
+        set_argument_pointer!(args, coordinates, coords)
         set_argument_pointer!(args, particleContributing, contributing)
         energy = Ref{Cdouble}(0.0)
         forces = zeros(3, n)
@@ -111,18 +116,19 @@ function KIMModel(model_name::String;
         end
 
         # Set neighbor list if provided
-        if neighbor_function !== nothing && containers !== nothing
-            data_obj_ptr = pointer_from_objref(containers)
-            set_callback_pointer!(args, GetNeighborList, cpp, kim_neighbors_callback, data_obj_ptr)
-            
-            GC.@preserve containers begin
-                # keep the neighbor list alive during the compute call
+        if neighbor_function === nothing
+            GC.@preserve containers coords forces energy all_positions particle_species_codes begin
+                fptr = kim_api.@cast_as_kim_neigh_fptr(kim_api.kim_neighbors_callback)
+                data_obj_ptr = pointer_from_objref(containers)
+                data_obj_ptr = pointer_from_objref(containers)                            
+                set_callback_pointer!(args, GetNeighborList, c, fptr, data_obj_ptr)
                 compute!(model, args)
             end
         else
-            compute!(model, args)
-        end
-        
+            error("TODO: Handle custom neighbor function")
+        end        
+        println("Energy: $(energy[])")
+
         if :energy in compute && supports_energy != notSupported
             results[:energy] = energy[]
         end
@@ -134,3 +140,5 @@ function KIMModel(model_name::String;
         return results
     end
 end
+
+

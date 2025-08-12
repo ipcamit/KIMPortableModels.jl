@@ -94,31 +94,46 @@ function kim_neighbors_callback(
     particle_idx::Cint,
     n_neighbors_ptr::Ptr{Cint},
     neighbors_ptr::Ptr{Ptr{Cint}}
-    )::Cint
+)::Cint
+    println("kim_neighbors_callback: list_idx=$(list_idx), particle_idx=$(particle_idx)")
     try
+        
+        if data_ptr == C_NULL
+            unsafe_store!(n_neighbors_ptr, Cint(0))
+            return Cint(0)  # FOR DEBUGGING ONLY
+        end
+        
         containers = unsafe_pointer_to_objref(data_ptr)::Vector{NeighborListContainer}
+        if list_idx < 0 || list_idx >= n_lists
+            return Cint(1)
+        end
+        container_idx = list_idx + 1
+        container = containers[container_idx]
         
-        # Bounds check
-        (list_idx < 0 || list_idx >= n_lists) && return Cint(1)
+        particle_1based = particle_idx + 1
+        neighbors = container.neighbors[particle_1based]
         
-        # Get container (convert to 1-based)
-        container = containers[list_idx + 1]
-        
-        # Get pre-computed neighbors (convert particle index to 1-based)
-        neighbors = container.neighbors[particle_idx + 1]
-        
-        # Copy to temp storage and convert to 0-based for KIM
         resize!(container.temp_storage, length(neighbors))
         container.temp_storage .= neighbors .- 1
         
         # Set outputs
-        unsafe_store!(n_neighbors_ptr, length(neighbors))
+        unsafe_store!(n_neighbors_ptr, Cint(length(neighbors)))
         unsafe_store!(neighbors_ptr, pointer(container.temp_storage))
         
         return Cint(0)
-    catch
+    catch e
         return Cint(1)
     end
 end
-    
-export create_kim_neighborlists, kim_neighbors_callback
+
+macro cast_as_kim_neigh_fptr(func)
+    quote
+        @cfunction(
+            $func,
+            Cint,
+            (Ptr{Cvoid}, Cint, Ptr{Cdouble}, Cint, Cint, Ptr{Cint}, Ptr{Ptr{Cint}})
+        )
+    end
+end
+
+export create_kim_neighborlists, kim_neighbors_callback, cast_as_kim_neigh_fptr
