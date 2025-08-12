@@ -118,8 +118,7 @@ function KIMModel(model_name::String;
         # Set neighbor list if provided
         if neighbor_function === nothing
             GC.@preserve containers coords forces energy all_positions particle_species_codes begin
-                fptr = kim_api.@cast_as_kim_neigh_fptr(kim_api.kim_neighbors_callback)
-                data_obj_ptr = pointer_from_objref(containers)
+                fptr = @cast_as_kim_neigh_fptr(kim_neighbors_callback)
                 data_obj_ptr = pointer_from_objref(containers)                            
                 set_callback_pointer!(args, GetNeighborList, c, fptr, data_obj_ptr)
                 compute!(model, args)
