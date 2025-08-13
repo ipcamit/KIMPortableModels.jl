@@ -4,7 +4,9 @@
 <img src="./kimapijl.png" alt="KIM API JL Logo" width="300" />
 </p>
 
-Julia interface to the [KIM-API](https:https://kim-api.readthedocs.io) (Knowledgebase of Interatomic Models). Think of it as the Julia equivalent of the KIMPY Python package.
+Julia interface to the [KIM-API](https:https://kim-api.readthedocs.io) (Knowledgebase of Interatomic Models). 
+This is a low-level interface to the KIM-API, allowing you to access interatomic models directly from Julia.
+Think of it as the Julia equivalent of the KIMPY Python package.
 
 ## Installation
 
@@ -14,6 +16,14 @@ Pkg.develop(path="/path/to/kim_api.jl")
 ```
 
 ## Quick Start
+
+Export the location of the KIM-API library:
+
+```shell
+export KIM_API_LIB=/path/to/kim_api.so
+```
+
+Then, you can use the package as follows:
 
 ```julia
 using kim_api
