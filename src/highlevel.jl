@@ -33,24 +33,24 @@ function KIMModel(model_name::String;
     end
     
     args = create_compute_arguments(model)
-    
-    # Check support status
-    supports_energy = notSupported
-    supports_forces = notSupported
-    
-    if :energy in compute
-        supports_energy = get_argument_support_status(args, partialEnergy)
-        if supports_energy == notSupported
-            error("Model does not support energy computation")
-        end
-    end
-
-    if :forces in compute
-        supports_forces = get_argument_support_status(args, partialForces)
-        if supports_forces == notSupported
-            error("Model does not support forces computation")
-        end
-    end
+    # println("Created compute arguments: $args")
+#    # Check support status
+   supports_energy = notSupported
+   supports_forces = notSupported
+#    
+   if :energy in compute
+       supports_energy = get_argument_support_status(args, partialEnergy)
+       if supports_energy == notSupported
+           error("Model does not support energy computation")
+       end
+   end
+#
+   if :forces in compute
+       supports_forces = get_argument_support_status(args, partialForces)
+       if supports_forces == notSupported
+           error("Model does not support forces computation")
+       end
+   end
 
     if length(compute) == 0
         error("At least one compute argument must be requested: :energy or :forces")
@@ -69,7 +69,7 @@ function KIMModel(model_name::String;
     if neighbor_function === nothing
         # default neighbor function
         n_cutoffs, cutoffs, will_not_request_ghost_neigh = get_neighbor_list_pointers(model)
-        println("Model needs $n_cutoffs neighbor lists with cutoffs: $cutoffs")
+        # println("Model needs $n_cutoffs neighbor lists with cutoffs: $cutoffs")
     else
         error("TODO: Handle custom neighbor function")
     end
@@ -85,7 +85,7 @@ function KIMModel(model_name::String;
                 create_kim_neighborlists(positions, cutoffs, species;
                 cell=cell, pbc=pbc, 
                 will_not_request_ghost_neigh=will_not_request_ghost_neigh)
-            println("Created neighbor lists with $(all_positions) total positions including ghosts. $(containers)")
+            # println("Created neighbor lists with $(all_positions) total positions including ghosts. $(containers)")
         else
             error("TODO: Neighbor function is not provided.")
         end
@@ -97,15 +97,19 @@ function KIMModel(model_name::String;
         n = size(coords, 2)
 
         n_ref = Ref{Cint}(n)
+        # println("args", args)
+        # args = create_compute_arguments(model)
+
+        # TODO: This energy and forces pointer have to be created here only
+        # otherwise it will not work
+        # Discuss with Ryan regarding the pointer creation
+        # Or run with address sanitizer. Possible memory leak? 
+        energy = Ref{Cdouble}(0.0)
+        forces = zeros(3, n)
         set_argument_pointer!(args, numberOfParticles, n_ref)
         set_argument_pointer!(args, particleSpeciesCodes, particle_species_codes)
         set_argument_pointer!(args, coordinates, coords)
         set_argument_pointer!(args, particleContributing, contributing)
-        energy = Ref{Cdouble}(0.0)
-        forces = zeros(3, n)
-        
-        # Results storage
-        results = Dict{Symbol,Any}()
         
         if :energy in compute && supports_energy != notSupported
             set_argument_pointer!(args, partialEnergy, energy)
@@ -114,6 +118,9 @@ function KIMModel(model_name::String;
         if :forces in compute && supports_forces != notSupported
             set_argument_pointer!(args, partialForces, forces)
         end
+        # Results storage
+        
+        results = Dict{Symbol,Any}()
 
         # Set neighbor list if provided
         if neighbor_function === nothing
@@ -126,15 +133,13 @@ function KIMModel(model_name::String;
         else
             error("TODO: Handle custom neighbor function")
         end        
-        println("Energy: $(energy[])")
-
-        if :energy in compute && supports_energy != notSupported
+        #if :energy in compute && supports_energy != notSupported
             results[:energy] = energy[]
-        end
+        #end
         
-        if :forces in compute && supports_forces != notSupported
+        #if :forces in compute && supports_forces != notSupported
             results[:forces] = forces
-        end
+        #end
 
         return results
     end

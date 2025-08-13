@@ -95,7 +95,7 @@ function kim_neighbors_callback(
     n_neighbors_ptr::Ptr{Cint},
     neighbors_ptr::Ptr{Ptr{Cint}}
 )::Cint
-    println("kim_neighbors_callback: list_idx=$(list_idx), particle_idx=$(particle_idx)")
+    # println("kim_neighbors_callback: list_idx=$(list_idx), particle_idx=$(particle_idx)")
     try
         
         if data_ptr == C_NULL
