@@ -21,10 +21,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: Install KIM-API
+      - name: Build KIM-API from source
         run: |
           sudo apt-get update
-          sudo apt-get install -y kim-api
+          sudo apt-get install -y cmake g++ gcc gfortran make wget
+          wget https://github.com/openkim/kim-api/archive/refs/tags/v2.4.1.tar.gz
+          tar -xvf v2.4.1.tar.gz
+          cd kim-api*
+          mkdir build && cd build
+          cmake .. -DCMAKE_INSTALL_PREFIX=/usr/local
+          make -j2
+          sudo make install
+          sudo ldconfig
           
       - uses: julia-actions/setup-julia@v1
         with:
