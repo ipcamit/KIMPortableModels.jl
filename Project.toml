@@ -8,7 +8,6 @@ license = "MIT"
 
 [deps]
 CEnum = "fa961155-64e5-5f13-b03f-caf6b980ea82"
-Clang = "40e3b903-d033-50b4-a0cc-940c62c95e31"
 Libdl = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
 NeighbourLists = "2fcf5ba9-9ed4-57cf-b73f-ff513e316b9c"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
@@ -23,7 +22,6 @@ docs = ["Documenter"]
 
 [compat]
 CEnum = "0.5"
-Clang = "0.18"
 Documenter = "0.27, 1"
 Libdl = "1"
 NeighbourLists = "0.5"
