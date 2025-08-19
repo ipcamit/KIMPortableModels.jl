@@ -1,19 +1,103 @@
 # highlevel.jl
 
 """
-    KIMModel(model_name::String; units=UNIT_STYLES.metal, 
-             neighbor_function=nothing, compute=[:energy, :forces]) -> Function
-Create a KIM model function that computes properties for given species and positions.
-The function returned will accept species codes and positions, and return requested computed properties.
+    highlevel.jl
+
+High-level interface for KIM-API model computations.
+
+This module provides a simplified, Julia-friendly interface to KIM-API
+models. It handles all the low-level details of model initialization,
+neighbor list setup, species mapping, and memory management, exposing
+a clean functional interface for energy and force calculations.
+
+# Key Functions
+- `KIMModel`: Create a high-level model function from a KIM model name
+
+# Design Philosophy
+The high-level interface follows Julia conventions:
+- Uses keyword arguments for optional parameters
+- Returns structured results in dictionaries
+- Automatically handles unit conversions and species mapping
+- Provides sensible defaults for common use cases
+- Supports both energy-only and energy+forces calculations
+
+# Performance Considerations
+The high-level interface pre-computes species mappings and neighbor
+list structures for efficiency. For repeated calculations with the
+same model, the returned function closure maintains state to minimize
+overhead.
+"""
+
+"""
+    KIMModel(model_name::String; units=:metal, neighbor_function=nothing, compute=[:energy, :forces]) -> Function
+
+Create a high-level KIM model computation function.
+
+This function initializes a KIM-API model and returns a closure that can be
+called repeatedly to perform energy and force calculations. The returned
+function handles all low-level KIM-API operations automatically.
+
+# Arguments
+- `model_name::String`: KIM model identifier (e.g., "SW_StillingerWeber_1985_Si__MO_405512056662_006")
+
+# Keyword Arguments
+- `units::Union{Symbol,NamedTuple}`: Unit system to use. Can be:
+  - `:metal`: Å, eV, e, K, ps (LAMMPS metal units)
+  - `:real`: Å, kcal/mol, e, K, fs (LAMMPS real units)
+  - `:si`: m, J, C, K, s (SI units)
+  - `:cgs`: cm, erg, statC, K, s (CGS units)
+  - `:electron`: Bohr, Hartree, e, K, fs (Atomic units)
+  - Custom named tuple of units:
+     (leng)
+
+- `neighbor_function`: Custom neighbor function (not yet implemented)
+- `compute::Vector{Symbol}`: Properties to compute, can include `:energy` and/or `:forces`
+
+# Returns
+A function `f(species, positions, cell, pbc)` that:
+- Accepts:
+  - `species::Vector{String}`: Chemical symbols for each atom
+  - `positions::Vector{SVector{3,Float64}}`: Atomic positions
+  - `cell::Matrix{Float64}`: Unit cell matrix (3×3)
+  - `pbc::Vector{Bool}`: Periodic boundary conditions [x,y,z]
+- Returns:
+  - `Dict{Symbol,Any}`: Results with keys `:energy` and/or `:forces`
+
+# Throws
+- `ErrorException`: If model creation fails or requested properties not supported
+
+# Example
+```julia
+# Create model function
+model = KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006")
+
+# Define system
+species = ["Si", "Si"]
+positions = [SVector(0.0, 0.0, 0.0), SVector(1.0, 1.0, 1.0)]
+cell = 5.43 * I(3)  # Silicon lattice parameter
+pbc = [true, true, true]
+
+# Compute properties
+results = model(species, positions, cell, pbc)
+println("Energy: ", results[:energy])
+println("Forces: ", results[:forces])
+```
+
+# Implementation Notes
+- Automatically generates ghost atoms for periodic boundary conditions
+- Pre-computes species mappings for efficiency
+- Handles multiple cutoff distances if required by the model
+- Uses zero-based indexing internally to match KIM-API conventions
 """
 function KIMModel(model_name::String; 
-                  units::Union{Symbol, Tuple{LengthUnit, EnergyUnit, ChargeUnit, TemperatureUnit, TimeUnit}} = :metal,
+                  units::Union{Symbol, NamedTuple} = :metal,
                   neighbor_function=nothing, #TODO: Handle neighbor function properly
                   compute=[:energy, :forces])
     # Initialize model
-    if typeof(units) == Symbol
+    local units_in 
+    if units isa Symbol
         units_in = get_lammps_style_units(units)
-    elseif typeof(units) == Tuple
+    elseif units isa NamedTuple
         # Ensure units are in correct order
         if length(units) != 5
             error("Units tuple must have exactly 5 elements: (length_unit, energy_unit, charge_unit, temperature_unit, time_unit)")
@@ -23,6 +107,8 @@ function KIMModel(model_name::String;
             sorted_units = push!(sorted_units, getfield(units, Symbol(unit_order)))
         end
         units_in = (sorted_units...,)
+    else
+        error("Invalid units type. Must be Symbol or NamedTuple.")
     end
     
     model, accepted = create_model(Numbering(0), #TODO use one based numbering
@@ -138,11 +224,8 @@ function KIMModel(model_name::String;
         #end
         
         #if :forces in compute && supports_forces != notSupported
-            results[:forces] = forces
+            results[:forces] = add_forces(forces, atom_indices)
         #end
-
         return results
     end
 end
-
-

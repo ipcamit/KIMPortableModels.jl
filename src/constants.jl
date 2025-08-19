@@ -1,5 +1,35 @@
 # constants.jl - KIM-API constants
 
+"""
+    constants.jl
+
+KIM-API constants and enumerations.
+
+This module defines Julia enumerations that correspond to KIM-API constants
+for units, compute arguments, callbacks, and other API parameters. It provides
+functions to convert between string representations and integer constants.
+
+# Enumerations
+- `Numbering`: Zero-based or one-based indexing
+- `LengthUnit`: Length units (Å, Bohr, cm, m, nm)
+- `EnergyUnit`: Energy units (eV, J, kcal/mol, etc.)
+- `ChargeUnit`: Charge units (C, e, statC)
+- `TemperatureUnit`: Temperature units (K)
+- `TimeUnit`: Time units (fs, ps, ns, s)
+- `ComputeArgumentName`: Names for compute arguments
+- `ComputeCallbackName`: Names for compute callbacks
+- `LanguageName`: Programming language names
+- `SupportStatus`: Argument support status
+
+# Unit Styles
+Pre-defined unit combinations matching common molecular dynamics packages:
+- `:metal`: Å, eV, e, K, ps (LAMMPS metal units)
+- `:real`: Å, kcal/mol, e, K, fs (LAMMPS real units)
+- `:si`: m, J, C, K, s (SI units)
+- `:cgs`: cm, erg, statC, K, s (CGS units)
+- `:electron`: Bohr, Hartree, e, K, fs (Atomic units)
+"""
+
 # Enumerations matching KIM-API values
 @enum Numbering::Cint begin
     zeroBased = 0
@@ -240,5 +270,6 @@ export Numbering, LengthUnit, EnergyUnit, ChargeUnit,
 export get_numbering, get_length_unit, get_energy_unit, get_charge_unit,
        get_temperature_unit, get_time_unit, get_compute_argument_name,
        get_compute_callback_name, get_language_name, get_support_status,
+       get_lammps_style_units,
        numbering_to_string, length_unit_to_string, energy_unit_to_string,
        compute_argument_name_to_string

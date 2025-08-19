@@ -58,10 +58,23 @@ forces = results[:forces]
 - NeighbourLists.jl, StaticArrays.jl
 
 
+## Documentation
+
+Full documentation is available at [https://gupta839.github.io/kim_api.jl/](https://gupta839.github.io/kim_api.jl/)
+
+## Testing
+
+Run the test suite with:
+
+```julia
+using Pkg
+Pkg.test("kim_api")
+```
+
 ## TODO
-- More tests 
-- Documentation
 - ML models support (Need to enable ghost atoms neighbor list generation)
+- Performance optimizations
+- Additional model features support
 
 ## License
 

@@ -1,6 +1,47 @@
 # species.jl
+
+"""
+    species.jl
+
+KIM-API species management and utilities.
+
+This module provides functions for handling chemical species in KIM-API,
+including species name lookup, validation, and mapping between string
+representations and integer codes used by KIM models.
+
+# Key Types
+- `SpeciesName`: Type alias for species integer codes
+
+# Constants
+- `SpeciesSymbols`: Tuple of all supported chemical element symbols
+
+# Key Functions
+- `get_species_number`: Convert species string to integer code
+- `get_species_symbol`: Convert species integer code to string
+- `get_species_codes_from_model`: Map species strings to model-specific codes
+- `get_species_map_closure`: Create efficient species mapping function
+
+# Model Integration
+The module provides functions to check which species are supported by
+a specific KIM model and create efficient mappings for repeated use.
+"""
 const SpeciesName = Cint
 
+"""
+    SpeciesSymbols
+
+Tuple containing all chemical element symbols supported by KIM-API.
+
+This includes all elements from the periodic table from hydrogen (H)
+to oganesson (Og), plus "electron" as a special particle type.
+The order corresponds to the atomic numbers, with "electron" at index 1.
+
+# Example
+```julia
+SpeciesSymbols[2]  # "H" (hydrogen)
+SpeciesSymbols[15] # "Si" (silicon)
+```
+"""
 const SpeciesSymbols::Tuple = ( "electron", "H", "He", "Li", "Be", "B", "C", "N", 
 "O", "F", "Ne", "Na", "Mg", "Al", "Si", "P", "S", "Cl", "Ar", "K", "Ca", 
 "Sc", "Ti", "V", "Cr", "Mn", "Fe", "Co", "Ni", "Cu", "Zn", "Ga", "Ge", "As", 

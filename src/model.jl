@@ -1,10 +1,62 @@
 # model.jl - KIM-API model initialization
 
+"""
+    model.jl
+
+KIM-API model creation, management, and computation.
+
+This module provides Julia wrappers for KIM-API model operations including:
+- Model creation and destruction
+- Compute arguments management
+- Setting data pointers for calculations
+- Executing model computations
+- Neighbor list callback registration
+
+# Core Types
+- `Model`: Wrapper for KIM-API model pointer
+- `ComputeArguments`: Wrapper for KIM-API compute arguments pointer
+
+# Key Functions
+- `create_model`: Initialize a KIM model with specified units
+- `create_compute_arguments`: Create compute arguments container
+- `set_argument_pointer!`: Set pointers to input/output data
+- `compute!`: Execute the model calculation
+- `get_influence_distance`: Get model's cutoff distance
+
+# Memory Management
+The Model and ComputeArguments types wrap C pointers and provide
+destructor functions to prevent memory leaks.
+"""
+
+"""
+    Model
+
+Wrapper for KIM-API model pointer.
+
+This mutable struct holds a pointer to a KIM-API model instance.
+The pointer should be initialized using `create_model()` and
+destroyed using `destroy_model!()` to prevent memory leaks.
+
+# Fields
+- `p::Ptr{Cvoid}`: C pointer to the KIM-API model
+"""
 mutable struct Model
     p::Ptr{Cvoid}
     Model() = new(C_NULL)
 end
 
+"""
+    ComputeArguments
+
+Wrapper for KIM-API compute arguments pointer.
+
+This mutable struct holds a pointer to a KIM-API compute arguments
+instance, which contains all the data needed for model calculations
+including particle positions, species, and output arrays.
+
+# Fields
+- `p::Ptr{Cvoid}`: C pointer to the KIM-API compute arguments
+"""
 mutable struct ComputeArguments
     p::Ptr{Cvoid}
     ComputeArguments() = new(C_NULL)
@@ -12,8 +64,36 @@ end
 
 
 """
-    create_model(numbering, length_unit, energy_unit, charge_unit, 
-                 temperature_unit, time_unit, model_name) -> (Model, Bool)
+    create_model(numbering, length_unit, energy_unit, charge_unit, temperature_unit, time_unit, model_name) -> (Model, Bool)
+
+Create a new KIM-API model instance with specified units.
+
+# Arguments
+- `numbering::Numbering`: Indexing scheme (zeroBased or oneBased)
+- `length_unit::LengthUnit`: Length unit (A, Bohr, cm, m, nm)
+- `energy_unit::EnergyUnit`: Energy unit (eV, J, kcal_mol, etc.)
+- `charge_unit::ChargeUnit`: Charge unit (C, e, statC)
+- `temperature_unit::TemperatureUnit`: Temperature unit (K)
+- `time_unit::TimeUnit`: Time unit (fs, ps, ns, s)
+- `model_name::String`: Name of the KIM model to load
+
+# Returns
+- `Model`: The created model instance
+- `Bool`: Whether the specified units were accepted by the model
+
+# Throws
+- `ErrorException`: If model creation fails
+
+# Example
+```julia
+model, accepted = create_model(
+    zeroBased, A, eV, e, K, ps,
+    "SW_StillingerWeber_1985_Si__MO_405512056662_006"
+)
+if !accepted
+    error("Model rejected the specified units")
+end
+```
 """
 function create_model(numbering::Numbering, 
                       length_unit::LengthUnit, 

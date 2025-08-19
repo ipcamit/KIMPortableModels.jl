@@ -1,0 +1,6 @@
+[deps]
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+kim_api = "77fb50fe-d0f2-4096-8098-77bb80f69f63"
+
+[compat]
+Documenter = "0.27, 1"

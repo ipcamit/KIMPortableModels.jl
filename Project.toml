@@ -13,10 +13,20 @@ Libdl = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
 NeighbourLists = "2fcf5ba9-9ed4-57cf-b73f-ff513e316b9c"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
+[extras]
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
+docs = ["Documenter"]
+
 [compat]
 CEnum = "0.5"
 Clang = "0.18"
+Documenter = "0.27, 1"
 Libdl = "1"
 NeighbourLists = "0.5"
 StaticArrays = "1"
+Test = "1"
 julia = "1.10"

@@ -1,8 +1,53 @@
 """
-Minimal KIM-API neighbor list module using NeighbourLists.jl
+    neighborlist.jl
+
+KIM-API neighbor list implementation using NeighbourLists.jl.
+
+This module provides efficient neighbor list generation and callback
+functions for KIM-API models. It handles periodic boundary conditions
+by creating ghost atoms and provides the required callback interface
+for KIM-API neighbor list queries.
+
+# Key Types
+- `NeighborListContainer`: Container for pre-computed neighbor lists
+
+# Key Functions
+- `create_kim_neighborlists`: Generate neighbor lists with ghost atoms for PBC
+- `kim_neighbors_callback`: KIM-API callback function for neighbor queries
+- `@cast_as_kim_neigh_fptr`: Macro to create C function pointer for callbacks
+
+# Implementation Details
+The neighbor list implementation uses NeighbourLists.jl for efficient
+spatial searching and automatically handles:
+- Periodic boundary conditions via ghost atom generation
+- Multiple cutoff distances (for models requiring multiple neighbor lists)
+- Zero-based/one-based index conversions between Julia and KIM-API
+- Memory management for callback data
+
+# Performance Notes
+Neighbor lists are pre-computed for better performance, but this may use
+more memory for large systems. The callback function provides efficient
+access during KIM-API model computations.
 """
 
-# Container for neighbor list data
+"""
+    NeighborListContainer
+
+Container for pre-computed neighbor list data.
+
+This mutable struct stores neighbor lists for efficient access during
+KIM-API callback queries. It includes both the pre-computed neighbor
+data and temporary storage for index conversions.
+
+# Fields
+- `neighbors::Vector{Vector{Int32}}`: Pre-computed neighbors for each atom
+- `temp_storage::Vector{Int32}`: Reusable storage for current neighbor query
+
+# Notes
+The `temp_storage` field is used to convert between Julia's 1-based
+indexing and KIM-API's 0-based indexing during callback execution,
+avoiding memory allocations in the hot path.
+"""
 mutable struct NeighborListContainer
     neighbors::Vector{Vector{Int32}}  # Pre-computed neighbors for each atom
     temp_storage::Vector{Int32}      # Reusable storage for current query
@@ -126,6 +171,13 @@ function kim_neighbors_callback(
     end
 end
 
+
+"""
+    @cast_as_kim_neigh_fptr(func)
+Macro to create a C function pointer for KIM-API neighbor list callbacks.
+This macro converts a Julia function into a C-compatible function pointer
+for use with KIM-API's neighbor list interface.
+"""
 macro cast_as_kim_neigh_fptr(func)
     quote
         @cfunction(
