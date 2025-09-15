@@ -3,7 +3,7 @@ uuid = "110f5901-8789-45df-852c-04e9fda0ddd7"
 keywords = ["molecular-dynamics", "kim-api", "interatomic-potentials", "atomistic-simulations"]
 authors = ["Amit Gupta <gupta839@umn.edu>"]
 description = "Julia interface to the KIM-API (Knowledgebase of Interatomic Models) for molecular simulations"
-version = "0.1.0"
+version = "0.5.0"
 
 [deps]
 CEnum = "fa961155-64e5-5f13-b03f-caf6b980ea82"
