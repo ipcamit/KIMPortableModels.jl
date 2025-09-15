@@ -7,6 +7,7 @@ Functions for managing chemical species in KIM-API.
 ```@docs
 KIM.SpeciesName
 KIM.SpeciesSymbols
+KIM.SpeciesToAtomicNumbers
 ```
 
 ## Basic Species Functions

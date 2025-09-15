@@ -12,10 +12,16 @@ Think of it as the Julia equivalent of the KIMPY Python package.
 
 ## Installation
 
+For latest version:
 ```julia
 using Pkg
-# KIMNeighborList.jl should be available as a local dependency
-Pkg.develop(path="/path/to/KIM.jl")
+Pkg.add(url="https://github.com/ipcamit/KIM.jl")
+```
+
+For stable version:
+```julia
+using Pkg
+Pkg.add("KIM")
 ```
 
 ## Quick Start
@@ -75,9 +81,10 @@ Pkg.test("KIM")
 ```
 
 ## TODO
-- ML models support (Need to enable ghost atoms neighbor list generation)
+- Move to 1 based numbering internally for consistency 
 - Performance optimizations
 - Additional model features support
+- Test ML models
 
 ## License
 

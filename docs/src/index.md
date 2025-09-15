@@ -19,7 +19,7 @@ KIM.jl provides both low-level and high-level interfaces to KIM-API, enabling Ju
 ### Quick Start
 
 ```julia
-using KIM
+using KIM, StaticArrays, LinearAlgebra
 
 # Create a model function
 model = KIM.KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006")
@@ -52,11 +52,19 @@ export KIM_API_LIB=${CONDA_PREFIX}/lib/libkim-api.so
 
 ### Package Installation
 
+FOr latest version:
+
 ```julia
 using Pkg
 Pkg.add(url="https://github.com/ipcamit/KIM.jl.git")
 ```
 
+or
+
+```julia
+using Pkg
+Pkg.add("KIM")
+```
 ### Environment Setup
 
 If KIM-API is not in your system library path, set the environment variable:
