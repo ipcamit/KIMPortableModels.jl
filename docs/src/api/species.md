@@ -5,29 +5,29 @@ Functions for managing chemical species in KIM-API.
 ## Types and Constants
 
 ```@docs
-KIM.SpeciesName
-KIM.SpeciesSymbols
-KIM.SpeciesToAtomicNumbers
+KIMPortableModels.SpeciesName
+KIMPortableModels.SpeciesSymbols
+KIMPortableModels.SpeciesToAtomicNumbers
 ```
 
 ## Basic Species Functions
 
 ```@docs
-KIM.get_species_number
-KIM.get_species_symbol
-KIM.species_name_known
-KIM.species_name_equal
-KIM.species_name_not_equal
+KIMPortableModels.get_species_number
+KIMPortableModels.get_species_symbol
+KIMPortableModels.species_name_known
+KIMPortableModels.species_name_equal
+KIMPortableModels.species_name_not_equal
 ```
 
 ## Model-Specific Species Functions
 
 ```@docs
-KIM.get_species_support_and_code
-KIM.get_species_codes_from_model
-KIM.get_unique_species_map
-KIM.get_supported_species_map
-KIM.get_species_map_closure
+KIMPortableModels.get_species_support_and_code
+KIMPortableModels.get_species_codes_from_model
+KIMPortableModels.get_unique_species_map
+KIMPortableModels.get_supported_species_map
+KIMPortableModels.get_species_map_closure
 ```
 
 ## Usage Examples
@@ -49,10 +49,10 @@ ar_number = get_species_number("Ar")
 ### Model-Specific Species Handling
 
 ```julia
-using KIM
+using KIMPortableModels
 
 # Create a model
-model = KIM.KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006")
+model = KIMPortableModels.KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006")
 
 # Get species codes for specific atoms
 species_strings = ["Si", "Si", "Si"]

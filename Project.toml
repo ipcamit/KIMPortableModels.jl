@@ -1,4 +1,4 @@
-name = "KIM"
+name = "KIMPortableModels"
 uuid = "110f5901-8789-45df-852c-04e9fda0ddd7"
 keywords = ["molecular-dynamics", "kim-api", "interatomic-potentials", "atomistic-simulations"]
 authors = ["Amit Gupta <gupta839@umn.edu>"]

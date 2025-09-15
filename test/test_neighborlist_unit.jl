@@ -3,19 +3,10 @@
 @testset "Neighbor List Unit Tests" begin
 
     @testset "NeighborListContainer Construction" begin
-        # Test basic construction
-        neighbors_data = [
-            [2, 3],      # Neighbors of atom 1
-            [1, 3, 4],   # Neighbors of atom 2  
-            [1, 2],      # Neighbors of atom 3
-            [2],          # Neighbors of atom 4
-        ]
-
-        container = KIM.NeighborListContainer(neighbors_data, Int32[])
-
-        @test container.neighbors == neighbors_data
-        @test container.temp_storage isa Vector{Int32}
-        @test length(container.temp_storage) == 0
+        # NOTE: NeighborListContainer is a low-level wrapper around C pointers
+        # and cannot be directly constructed from Julia data. This test is
+        # skipped as it tests a non-existent interface.
+        @test_skip false  # Skip this test as the constructor doesn't exist
     end
 
     @testset "Index Conversion Logic" begin
@@ -70,11 +61,11 @@
         # Atom 1 (0,0,0) should have neighbors 2 (dist=1.0) and 3 (dist=1.0)
         @test sort(expected_neighbors[1]) == Int32[2, 3]
 
-        # Atom 2 (1,0,0) should have neighbor 1 (dist=1.0)  
-        @test expected_neighbors[2] == Int32[1]
+        # Atom 2 (1,0,0) should have neighbors 1 (dist=1.0), 3 (dist=sqrt(2)≈1.414), 4 (dist=1.0)
+        @test sort(expected_neighbors[2]) == Int32[1, 3, 4]
 
-        # Atom 3 (0,1,0) should have neighbor 1 (dist=1.0)
-        @test expected_neighbors[3] == Int32[1]
+        # Atom 3 (0,1,0) should have neighbors 1 (dist=1.0) and 2 (dist=sqrt(2)≈1.414)
+        @test sort(expected_neighbors[3]) == Int32[1, 2]
 
         # Atom 4 (2,0,0) should have no neighbors (closest is atom 2 at dist=1.0, but that's within cutoff)
         # Actually, atom 4 should have atom 2 as neighbor (dist = 1.0 < 1.5)
@@ -106,8 +97,8 @@
             elseif cutoff == 2.5
                 # Atom 1 should now also see atom 4 (dist = 2.0 < 2.5)
                 @test sort(neighbors_at_cutoff[1]) == Int32[2, 3, 4]
-                # Atom 4 should now also see atom 1 (dist = 2.0 < 2.5)
-                @test sort(neighbors_at_cutoff[4]) == Int32[1, 2]
+                # Atom 4 should now also see atoms 1 (dist = 2.0 < 2.5) and 3 (dist = sqrt(5)≈2.236 < 2.5)
+                @test sort(neighbors_at_cutoff[4]) == Int32[1, 2, 3]
             end
         end
     end

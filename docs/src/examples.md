@@ -1,18 +1,18 @@
 # Examples
 
-This page provides practical examples of using KIM.jl for various molecular simulation tasks.
+This page provides practical examples of using KIMPortableModels.jl for various molecular simulation tasks.
 
 ## Basic Examples
 
 ### Computing Energy and Forces
 
 ```julia
-using KIM
+using KIMPortableModels
 using StaticArrays
 using LinearAlgebra
 
 # Create a KIM model for silicon
-model = KIM.KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006")
+model = KIMPortableModels.KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006")
 
 # Define a silicon dimer
 species = ["Si", "Si"]
@@ -36,11 +36,11 @@ println("Force on atom 2: $(results[:forces][:, 2]) eV/Å")
 ### Energy Minimization
 
 ```julia
-using KIM, Optim
+using KIMPortableModels, Optim
 using StaticArrays, LinearAlgebra
 
 # Set up model and initial structure
-model = KIM.KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006")
+model = KIMPortableModels.KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006")
 species = ["Si", "Si"]
 cell = [5.43 0.0 0.0; 0.0 5.43 0.0; 0.0 0.0 5.43]
 pbc = [true, true, true]

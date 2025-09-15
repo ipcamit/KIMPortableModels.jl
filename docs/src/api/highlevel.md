@@ -3,7 +3,7 @@
 The high-level interface provides a simple, Julia-friendly way to use KIM-API models without dealing with the underlying C API complexity.
 
 ```@docs
-KIM.KIMModel
+KIMPortableModels.KIMModel
 ```
 
 ## Usage Examples
@@ -11,10 +11,10 @@ KIM.KIMModel
 ### Basic Usage
 
 ```julia
-using KIM
+using KIMPortableModels
 
 # Create model for silicon
-model = KIM.KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006")
+model = KIMPortableModels.KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006")
 
 # Simple two-atom system
 species = ["Si", "Si"] 
@@ -30,15 +30,15 @@ results = model(species, positions, cell, pbc)
 
 ```julia
 # Use LAMMPS real units (Å, kcal/mol, fs)
-model_real = KIM.KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006", 
+model_real = KIMPortableModels.KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006", 
                       units=:real)
 
 # Use SI units (m, J, s)  
-model_si = KIM.KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006",
+model_si = KIMPortableModels.KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006",
                     units=:si)
 
 # Custom units
-model_custom = KIM.KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006",
+model_custom = KIMPortableModels.KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006",
                         units=(A, eV, e, K, ps))
 ```
 
@@ -46,7 +46,7 @@ model_custom = KIM.KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006",
 
 ```julia
 # Only compute energy (faster for some applications)
-model_energy = KIM.KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006",
+model_energy = KIMPortableModels.KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006",
                         compute=[:energy])
 
 results = model_energy(species, positions, cell, pbc)
@@ -83,7 +83,7 @@ The high-level interface provides informative error messages:
 ```julia
 # Model doesn't exist
 try
-    model = KIM.KIMModel("NonExistentModel")
+    model = KIMPortableModels.KIMModel("NonExistentModel")
 catch e
     println("Model creation failed: ", e)
 end

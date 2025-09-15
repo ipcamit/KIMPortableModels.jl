@@ -68,10 +68,10 @@ A function `f(species, positions, cell, pbc)` that:
 
 # Example
 ```julia
-using KIM, StaticVectors, LinearAlgebra
+using KIMPortableModels, StaticVectors, LinearAlgebra
 
 # Create model function
-model = KIM.KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006")
+model = KIMPortableModels.KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006")
 
 # Define system
 species = ["Si", "Si"]

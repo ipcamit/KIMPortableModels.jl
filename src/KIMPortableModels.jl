@@ -1,5 +1,5 @@
 """
-    KIM.jl
+    KIMPortableModels.jl
 
 A comprehensive Julia interface to the KIM-API (Knowledgebase of Interatomic Models).
 
@@ -17,10 +17,10 @@ interatomic models available through the OpenKIM framework.
 
 # Quick Start
 ```julia
-using KIM
+using KIMPortableModels
 
 # Create a model function
-model = KIM.KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006")
+model = KIMPortableModels.KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006")
 
 # Define atomic system
 species = ["Si", "Si"]
@@ -67,7 +67,7 @@ For more information about KIM-API and available models, visit:
 - https://openkim.org
 - https://kim-api.readthedocs.io
 """
-module KIM
+module KIMPortableModels
 using CEnum
 using StaticArrays
 using KIMNeighborList

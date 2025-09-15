@@ -9,34 +9,34 @@
     @testset "KIMModel Function Creation" begin
         try
             # Test basic model creation
-            model_func = KIM.KIMModel(test_model_name)
+            model_func = KIMPortableModels.KIMModel(test_model_name)
             @test model_func isa Function
 
             # Test with different units
-            model_real = KIM.KIMModel(test_model_name, units = :real)
+            model_real = KIMPortableModels.KIMModel(test_model_name, units = :real)
             @test model_real isa Function
 
-            model_si = KIM.KIMModel(test_model_name, units = :si)
+            model_si = KIMPortableModels.KIMModel(test_model_name, units = :si)
             @test model_si isa Function
 
             # Test with custom units tuple
             custom_units = (
-                length = KIM.A,
-                energy = KIM.eV,
-                time = KIM.fs,
-                charge = KIM.e,
-                temperature = KIM.K,
+                length = KIMPortableModels.A,
+                energy = KIMPortableModels.eV,
+                time = KIMPortableModels.fs,
+                charge = KIMPortableModels.e,
+                temperature = KIMPortableModels.K,
             )
-            model_custom = KIM.KIMModel(test_model_name, units = custom_units)
+            model_custom = KIMPortableModels.KIMModel(test_model_name, units = custom_units)
             @test model_custom isa Function
 
             # Test with energy-only computation
-            model_energy = KIM.KIMModel(test_model_name, compute = [:energy])
+            model_energy = KIMPortableModels.KIMModel(test_model_name, compute = [:energy])
             @test model_energy isa Function
 
             # Test error handling for invalid arguments
-            @test_throws ErrorException KIM.KIMModel(test_model_name, compute = Symbol[])  # Empty compute
-            @test_throws ErrorException KIM.KIMModel(test_model_name, compute = [:invalid])  # Invalid property
+            @test_throws ErrorException KIMPortableModels.KIMModel(test_model_name, compute = Symbol[])  # Empty compute
+            @test_throws ErrorException KIMPortableModels.KIMModel(test_model_name, compute = [:invalid])  # Invalid property
 
         catch e
             if contains(string(e), "Model creation failed")
@@ -49,7 +49,7 @@
 
     @testset "Basic Computation" begin
         try
-            model = KIM.KIMModel(test_model_name)
+            model = KIMPortableModels.KIMModel(test_model_name)
 
             # Define simple silicon system
             species = ["Si", "Si"]
@@ -97,8 +97,8 @@
     @testset "Different Unit Systems" begin
         try
             # Create models with different unit systems
-            model_metal = KIM.KIMModel(test_model_name, units = :metal)
-            model_real = KIM.KIMModel(test_model_name, units = :real)
+            model_metal = KIMPortableModels.KIMModel(test_model_name, units = :metal)
+            model_real = KIMPortableModels.KIMModel(test_model_name, units = :real)
 
             # Simple system
             species = ["Si", "Si"]
@@ -127,7 +127,7 @@
 
     @testset "Energy-only Computation" begin
         try
-            model_energy = KIM.KIMModel(test_model_name, compute = [:energy])
+            model_energy = KIMPortableModels.KIMModel(test_model_name, compute = [:energy])
 
             species = ["Si", "Si"]
             positions = [SVector(0.0, 0.0, 0.0), SVector(2.35, 0.0, 0.0)]
@@ -149,7 +149,7 @@
 
     @testset "Error Handling" begin
         try
-            model = KIM.KIMModel(test_model_name)
+            model = KIMPortableModels.KIMModel(test_model_name)
 
             # Test with unsupported species
             @test_throws ErrorException model(
@@ -183,7 +183,7 @@
 
     @testset "Larger System" begin
         try
-            model = KIM.KIMModel(test_model_name)
+            model = KIMPortableModels.KIMModel(test_model_name)
 
             # Create a small silicon crystal (8 atoms)
             a = 5.43  # Silicon lattice parameter
@@ -219,7 +219,7 @@
 
     @testset "Performance and Memory" begin
         try
-            model = KIM.KIMModel(test_model_name)
+            model = KIMPortableModels.KIMModel(test_model_name)
 
             species = ["Si", "Si"]
             positions = [SVector(0.0, 0.0, 0.0), SVector(2.35, 0.0, 0.0)]

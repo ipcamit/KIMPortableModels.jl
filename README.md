@@ -1,4 +1,4 @@
-# KIM.jl
+# KIMPortableModels.jl
 
 <p align="center">
 <img src="./kimapijl.png" alt="KIM API JL Logo" width="300" />
@@ -8,20 +8,20 @@ Julia interface to the [KIM-API](https:https://kim-api.readthedocs.io) (Knowledg
 This is a low-level interface to the KIM-API, allowing you to access interatomic models directly from Julia.
 Think of it as the Julia equivalent of the KIMPY Python package.
 
-[Documentation](https://ipcamit.github.io/KIM.jl/)
+[Documentation](https://ipcamit.github.io/KIMPortableModels.jl/)
 
 ## Installation
 
 For latest version:
 ```julia
 using Pkg
-Pkg.add(url="https://github.com/ipcamit/KIM.jl")
+Pkg.add(url="https://github.com/ipcamit/KIMPortableModels.jl")
 ```
 
 For stable version:
 ```julia
 using Pkg
-Pkg.add("KIM")
+Pkg.add("KIMPortableModels")
 ```
 
 ## Quick Start
@@ -35,11 +35,11 @@ export KIM_API_LIB=/path/to/libkim-api.so
 Then, you can use the package as follows:
 
 ```julia
-using KIM
+using KIMPortableModels
 using StaticArrays
 
 # Create a model
-model = KIM.KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006")
+model = KIMPortableModels.KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006")
 
 # Setup atoms
 positions = [SVector(0.0, 0.0, 0.0), SVector(2.7, 2.7, 0.0)]
@@ -69,7 +69,7 @@ forces = results[:forces]
 
 ## Documentation
 
-Full documentation is available at [https://ipcamit.github.io/KIM.jl/](https://ipcamit.github.io/KIM.jl/)
+Full documentation is available at [https://ipcamit.github.io/KIMPortableModels.jl/](https://ipcamit.github.io/KIMPortableModels.jl/)
 
 ## Testing
 
@@ -77,7 +77,7 @@ Run the test suite with:
 
 ```julia
 using Pkg
-Pkg.test("KIM")
+Pkg.test("KIMPortableModels")
 ```
 
 ## TODO

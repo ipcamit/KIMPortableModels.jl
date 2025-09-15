@@ -1,10 +1,10 @@
 # Constants & Units
 
-This page documents the constants, enumerations, and unit systems provided by KIM.jl.
+This page documents the constants, enumerations, and unit systems provided by KIMPortableModels.jl.
 
 ## Enumerations
 
-The following enumerations are defined and exported from KIM.jl:
+The following enumerations are defined and exported from KIMPortableModels.jl:
 
 - `Numbering`: Zero-based or one-based indexing
 - `LengthUnit`: Length units (angstrom, meter, etc.)
