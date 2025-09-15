@@ -5,25 +5,25 @@ Neighbor list implementation and callback functions for KIM-API.
 ## Types
 
 ```@docs
-kim_api.NeighborListContainer
+KIM.NeighborListContainer
 ```
 
 ## Functions
 
 ```@docs
-kim_api.create_kim_neighborlists
-kim_api.kim_neighbors_callback
+KIM.create_kim_neighborlists
+KIM.kim_neighbors_callback
 ```
 
 ## Macros
 
 ```@docs
-kim_api.@cast_as_kim_neigh_fptr
+KIM.@cast_as_kim_neigh_fptr
 ```
 
 ## Implementation Details
 
-The neighbor list system in kim_api.jl handles several complex aspects of KIM-API integration:
+The neighbor list system in KIM.jl handles several complex aspects of KIM-API integration:
 
 ### Periodic Boundary Conditions
 
@@ -71,7 +71,7 @@ int callback(void* data_object, int number_of_neighbor_lists,
             int* number_of_neighbors, int** neighbors_list_pointer)
 ```
 
-You can cast this into expected function pointer using `kim_api.cast_as_kim_neigh_fptr`.
+You can cast this into expected function pointer using `KIM.cast_as_kim_neigh_fptr`.
 
 ### Memory Management
 
@@ -86,12 +86,12 @@ The neighbor list containers maintain persistent storage to ensure:
 ### Basic Usage
 
 ```julia
-using kim_api, StaticArrays
+using KIM, StaticArrays
 
 # Define atomic positions
 positions = [SVector(0.0, 0.0, 0.0), SVector(2.5, 0.0, 0.0)]
 species = ["Si", "Si"]
-cell = 5.0 * I(3)
+cell = Matrix(5.0 * I(3))
 pbc = [true, true, true]
 
 # Create neighbor lists for 3.0 Å cutoff
@@ -104,7 +104,7 @@ containers, all_pos, all_spec, contrib, indices =
 
 ```julia
 # The high-level interface handles this automatically
-model = KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006")
+model = KIM.KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006")
 results = model(species, positions, cell, pbc)
 # Neighbor lists are created and managed internally
 ```

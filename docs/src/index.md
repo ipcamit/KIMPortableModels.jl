@@ -1,12 +1,12 @@
-# kim_api.jl
+# KIM.jl
 
 ```@docs
-kim_api.kim_api
+KIM.KIM
 ```
 
 ## Overview
 
-kim_api.jl provides both low-level and high-level interfaces to KIM-API, enabling Julia users to access the extensive collection of validated interatomic models available through the OpenKIM framework. Main purpose of this package is to provide a convenient way to integrate KIM models into Julia based MD simulators. Think of this as the Julia equivalent of the KIMPY package but with additional wrappers for ease of use.
+KIM.jl provides both low-level and high-level interfaces to KIM-API, enabling Julia users to access the extensive collection of validated interatomic models available through the OpenKIM framework. Main purpose of this package is to provide a convenient way to integrate KIM models into Julia based MD simulators. Think of this as the Julia equivalent of the KIMPY package but with additional wrappers for ease of use.
 
 ### Features
 
@@ -19,10 +19,10 @@ kim_api.jl provides both low-level and high-level interfaces to KIM-API, enablin
 ### Quick Start
 
 ```julia
-using kim_api
+using KIM
 
 # Create a model function
-model = kim_api.KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006")
+model = KIM.KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006")
 
 # Define atomic system
 species = ["Si", "Si"]
@@ -54,7 +54,7 @@ export KIM_API_LIB=${CONDA_PREFIX}/lib/libkim-api.so
 
 ```julia
 using Pkg
-Pkg.add(url="https://github.com/ipcamit/kim_api.jl.git")
+Pkg.add(url="https://github.com/ipcamit/KIM.jl.git")
 ```
 
 ### Environment Setup
@@ -67,7 +67,7 @@ export KIM_API_LIB="/path/to/libkim-api.so"
 
 ## Supported Unit Systems
 
-kim_api.jl supports multiple unit systems commonly used in molecular dynamics:
+KIM.jl supports multiple unit systems commonly used in molecular dynamics:
 
 | System     | Length   | Energy     | Charge | Temperature | Time |
 |------------|----------|------------|--------|-------------|------|
@@ -80,8 +80,8 @@ kim_api.jl supports multiple unit systems commonly used in molecular dynamics:
 You can also specify custom units by passing a named tuple of units during model creation:
 
 ```julia
-custom_units = (length=kim_api.A, energy=kim_api.eV, time=kim_api.fs, charge=kim_api.e, temperature=kim_api.K)
-model_custom = kim_api.KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006", 
+custom_units = (length=KIM.A, energy=KIM.eV, time=KIM.fs, charge=KIM.e, temperature=KIM.K)
+model_custom = KIM.KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006", 
                                  units=custom_units)
 ```
 
@@ -102,7 +102,7 @@ The package is organized into several modules:
 
 ## Performance
 
-kim_api.jl is designed for high performance:
+KIM.jl is designed for high performance:
 
 - Pre-computed species mappings minimize lookup overhead
 - Efficient neighbor list generation using NeighbourLists.jl
@@ -129,7 +129,7 @@ Consider citing the original KIM-API paper:
 
 ## License
 
-kim_api.jl is released under the MIT License. See the LICENSE file for details.
+KIM.jl is released under the MIT License. See the LICENSE file for details.
 
 ## Acknowledgments
 

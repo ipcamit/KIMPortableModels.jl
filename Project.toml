@@ -1,30 +1,33 @@
-name = "kim_api"
-uuid = "77fb50fe-d0f2-4096-8098-77bb80f69f63"
-authors = ["Amit Gupta <gupta839@umn.edu>"]
-version = "0.1.0"
-description = "Julia interface to the KIM-API (Knowledgebase of Interatomic Models) for molecular simulations"
+name = "KIM"
+uuid = "110f5901-8789-45df-852c-04e9fda0ddd7"
 keywords = ["molecular-dynamics", "kim-api", "interatomic-potentials", "atomistic-simulations"]
-license = "MIT"
+authors = ["Amit Gupta <gupta839@umn.edu>"]
+description = "Julia interface to the KIM-API (Knowledgebase of Interatomic Models) for molecular simulations"
+version = "0.1.0"
 
 [deps]
 CEnum = "fa961155-64e5-5f13-b03f-caf6b980ea82"
+CxxWrap = "1f15a43c-97ca-5a2a-ae31-89f07a497df4"
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+KIMNeighborList = "c95d6c40-0c10-4161-80ab-e9b71483fbc7"
 Libdl = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
-NeighbourLists = "2fcf5ba9-9ed4-57cf-b73f-ff513e316b9c"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
+
+[compat]
+CEnum = "0.5"
+CxxWrap = "0.17.3"
+Documenter = "0.27, 1"
+KIMNeighborList = "1.0.0"
+Libdl = "1"
+StaticArrays = "1"
+Test = "1"
+julia = "1.10"
 
 [extras]
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test"]
 docs = ["Documenter"]
-
-[compat]
-CEnum = "0.5"
-Documenter = "0.27, 1"
-Libdl = "1"
-NeighbourLists = "0.5"
-StaticArrays = "1"
-Test = "1"
-julia = "1.10"
+test = ["Test"]

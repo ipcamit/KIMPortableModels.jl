@@ -5,28 +5,28 @@ Functions for managing chemical species in KIM-API.
 ## Types and Constants
 
 ```@docs
-kim_api.SpeciesName
-kim_api.SpeciesSymbols
+KIM.SpeciesName
+KIM.SpeciesSymbols
 ```
 
 ## Basic Species Functions
 
 ```@docs
-kim_api.get_species_number
-kim_api.get_species_symbol
-kim_api.species_name_known
-kim_api.species_name_equal
-kim_api.species_name_not_equal
+KIM.get_species_number
+KIM.get_species_symbol
+KIM.species_name_known
+KIM.species_name_equal
+KIM.species_name_not_equal
 ```
 
 ## Model-Specific Species Functions
 
 ```@docs
-kim_api.get_species_support_and_code
-kim_api.get_species_codes_from_model
-kim_api.get_unique_species_map
-kim_api.get_supported_species_map
-kim_api.get_species_map_closure
+KIM.get_species_support_and_code
+KIM.get_species_codes_from_model
+KIM.get_unique_species_map
+KIM.get_supported_species_map
+KIM.get_species_map_closure
 ```
 
 ## Usage Examples
@@ -48,10 +48,10 @@ ar_number = get_species_number("Ar")
 ### Model-Specific Species Handling
 
 ```julia
-using kim_api
+using KIM
 
 # Create a model
-model = KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006")
+model = KIM.KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006")
 
 # Get species codes for specific atoms
 species_strings = ["Si", "Si", "Si"]

@@ -15,7 +15,7 @@ It is useful for accumulating results in a pre-allocated destination vector.
 # Returns
 - The modified `dst` vector with accumulated results.
 """
-function scatter_add!(dst::AbstractArray, src::AbstractArray, idx::AbstractArray; dims=1)
+function scatter_add!(dst::AbstractArray, src::AbstractArray, idx::AbstractArray; dims = 1)
     if ndims(src) == 1
         @inbounds @simd for i in eachindex(src, idx)
             dst[idx[i]] += src[i]
@@ -49,9 +49,8 @@ into a single destination array based on the provided indices.
 function add_forces(src::AbstractArray, idx::AbstractArray{<:Integer})
     dest = similar(src, eltype(src), (3, maximum(idx)))
     fill!(dest, zero(eltype(src)))
-    scatter_add!(dest, src, idx, dims=2)
+    scatter_add!(dest, src, idx, dims = 2)
     return dest
 end
 
 export scatter_add!, add_forces
-

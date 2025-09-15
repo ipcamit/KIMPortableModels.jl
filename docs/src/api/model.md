@@ -42,7 +42,7 @@ set_callback_pointer!
 ## Usage Example
 
 ```julia
-using kim_api
+using KIM
 
 # Create model with specific units
 model, accepted = create_model(

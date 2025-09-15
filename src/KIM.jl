@@ -1,5 +1,5 @@
 """
-    kim_api.jl
+    KIM.jl
 
 A comprehensive Julia interface to the KIM-API (Knowledgebase of Interatomic Models).
 
@@ -17,10 +17,10 @@ interatomic models available through the OpenKIM framework.
 
 # Quick Start
 ```julia
-using kim_api
+using KIM
 
 # Create a model function
-model = KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006")
+model = KIM.KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006")
 
 # Define atomic system
 species = ["Si", "Si"]
@@ -59,7 +59,7 @@ This package wraps the KIM-API C library and provides:
 
 # Dependencies
 - KIM-API C library (must be installed separately)
-- NeighbourLists.jl for efficient neighbor searching
+- KIMNeighborList.jl for efficient C++ neighbor searching
 - StaticArrays.jl for position vectors
 - CEnum.jl for C enumeration bindings
 
@@ -67,10 +67,11 @@ For more information about KIM-API and available models, visit:
 - https://openkim.org
 - https://kim-api.readthedocs.io
 """
-module kim_api
+module KIM
 using CEnum
 using StaticArrays
-using NeighbourLists
+using KIMNeighborList
+using LinearAlgebra
 using Libdl
 
 include("utils.jl") # Utility functions for scatter-add and reduce operations
@@ -80,7 +81,7 @@ include("libkim.jl") # Load the KIM API library
 include("constants.jl") # Default enumerations in kim-api
 
 include("model.jl") # functions for model creation and destruction
-                    # also includes ComputeArguments stuff for now
+# also includes ComputeArguments stuff for now
 
 include("species.jl") # All the species related functions
 

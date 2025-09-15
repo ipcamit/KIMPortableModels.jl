@@ -95,33 +95,37 @@ if !accepted
 end
 ```
 """
-function create_model(numbering::Numbering, 
-                      length_unit::LengthUnit, 
-                      energy_unit::EnergyUnit, 
-                      charge_unit::ChargeUnit,
-                      temperature_unit::TemperatureUnit, 
-                      time_unit::TimeUnit,
-                      model_name::String)
+function create_model(
+    numbering::Numbering,
+    length_unit::LengthUnit,
+    energy_unit::EnergyUnit,
+    charge_unit::ChargeUnit,
+    temperature_unit::TemperatureUnit,
+    time_unit::TimeUnit,
+    model_name::String,
+)
     model = Model()
     units_accepted = Ref{Cint}()
 
     model_ptr = Ref{Ptr{Cvoid}}(C_NULL)
-    
-    error_code = @ccall libkim.KIM_Model_Create(numbering::Cint, 
-                                                length_unit::Cint, 
-                                                energy_unit::Cint, 
-                                                charge_unit::Cint, 
-                                                temperature_unit::Cint, 
-                                                time_unit::Cint,
-                                                model_name::Cstring, 
-                                                units_accepted::Ptr{Cint}, 
-                                                model_ptr::Ptr{Ptr{Cvoid}})::Cint
-    
+
+    error_code = @ccall libkim.KIM_Model_Create(
+        numbering::Cint,
+        length_unit::Cint,
+        energy_unit::Cint,
+        charge_unit::Cint,
+        temperature_unit::Cint,
+        time_unit::Cint,
+        model_name::Cstring,
+        units_accepted::Ptr{Cint},
+        model_ptr::Ptr{Ptr{Cvoid}},
+    )::Cint
+
     if error_code != 0
         error("Model creation failed with error code: $error_code")
     end
     model.p = model_ptr[]
-    
+
     return model, Bool(units_accepted[])
 end
 
@@ -147,15 +151,17 @@ Create compute arguments for the model.
 """
 function create_compute_arguments(model::Model)
     args = ComputeArguments()
-    
+
     args_ptr = Ref{Ptr{Cvoid}}(C_NULL)
     error_code = @ccall libkim.KIM_Model_ComputeArgumentsCreate(
-        model.p::Ptr{Cvoid}, args_ptr::Ptr{Ptr{Cvoid}})::Cint
-    
+        model.p::Ptr{Cvoid},
+        args_ptr::Ptr{Ptr{Cvoid}},
+    )::Cint
+
     if error_code != 0
         error("ComputeArguments creation failed with error code: $error_code")
     end
-    
+
     args.p = args_ptr[]
 
     return args
@@ -169,7 +175,9 @@ Destroy compute arguments.
 function destroy_compute_arguments!(model::Model, args::ComputeArguments)
     if args.p != C_NULL
         @ccall libkim.KIM_Model_ComputeArgumentsDestroy(
-            model.p::Ptr{Cvoid}, Ref(args.p)::Ptr{Ptr{Cvoid}})::Cint
+            model.p::Ptr{Cvoid},
+            Ref(args.p)::Ptr{Ptr{Cvoid}},
+        )::Cint
         args.p = C_NULL
     end
 end
@@ -184,7 +192,9 @@ Get the influence distance (cutoff) from the model.
 function get_influence_distance(model::Model)
     distance = Ref{Cdouble}()
     @ccall libkim.KIM_Model_GetInfluenceDistance(
-        model.p::Ptr{Cvoid}, distance::Ptr{Cdouble})::Cvoid
+        model.p::Ptr{Cvoid},
+        distance::Ptr{Cdouble},
+    )::Cvoid
     return distance[]
 end
 
@@ -197,16 +207,18 @@ function get_neighbor_list_pointers(model::Model)
     n_lists = Ref{Cint}()
     cutoffs_ptr = Ref{Ptr{Cdouble}}()
     will_not_request_ptr = Ref{Ptr{Cint}}()
-    
+
     @ccall libkim.KIM_Model_GetNeighborListPointers(
-        model.p::Ptr{Cvoid}, n_lists::Ptr{Cint}, 
-        cutoffs_ptr::Ptr{Ptr{Cdouble}}, 
-        will_not_request_ptr::Ptr{Ptr{Cint}})::Cvoid
-    
+        model.p::Ptr{Cvoid},
+        n_lists::Ptr{Cint},
+        cutoffs_ptr::Ptr{Ptr{Cdouble}},
+        will_not_request_ptr::Ptr{Ptr{Cint}},
+    )::Cvoid
+
     n = n_lists[]
     cutoffs = unsafe_wrap(Array, cutoffs_ptr[], n)
     will_not_request = unsafe_wrap(Array, will_not_request_ptr[], n)
-    
+
     return n, cutoffs, Bool(will_not_request[1])
 end
 
@@ -218,10 +230,13 @@ Get the support status for a compute argument.
 """
 function get_argument_support_status(args::ComputeArguments, arg_name::ComputeArgumentName)
     status = Ref{Cint}()
-    
+
     @ccall libkim.KIM_ComputeArguments_GetArgumentSupportStatus(
-        args.p::Ptr{Cvoid}, arg_name::Cint, status::Ptr{Cint})::Cvoid
-    
+        args.p::Ptr{Cvoid},
+        arg_name::Cint,
+        status::Ptr{Cint},
+    )::Cvoid
+
     return SupportStatus(status[])
 end
 
@@ -232,12 +247,17 @@ end
 
 Set an integer argument pointer.
 """
-function set_argument_pointer!(args::ComputeArguments, 
-                               arg_name::ComputeArgumentName, 
-                               ptr::Union{Ptr{Cint}, Ref{Cint}, Vector{Cint}})
+function set_argument_pointer!(
+    args::ComputeArguments,
+    arg_name::ComputeArgumentName,
+    ptr::Union{Ptr{Cint},Ref{Cint},Vector{Cint}},
+)
     error_code = @ccall libkim.KIM_ComputeArguments_SetArgumentPointerInteger(
-        args.p::Ptr{Cvoid}, arg_name::Cint, ptr::Ptr{Cint})::Cint
-    
+        args.p::Ptr{Cvoid},
+        arg_name::Cint,
+        ptr::Ptr{Cint},
+    )::Cint
+
     if error_code != 0
         error("SetArgumentPointerInteger failed for $(arg_name)")
     end
@@ -248,12 +268,17 @@ end
 
 Set a double argument pointer.
 """
-function set_argument_pointer!(args::ComputeArguments,
-                               arg_name::ComputeArgumentName,
-                               ptr::Union{Ptr{Cdouble}, Ref{Cdouble}, Vector{Cdouble}, Matrix{Cdouble}})
+function set_argument_pointer!(
+    args::ComputeArguments,
+    arg_name::ComputeArgumentName,
+    ptr::Union{Ptr{Cdouble},Ref{Cdouble},Vector{Cdouble},Matrix{Cdouble}},
+)
     error_code = @ccall libkim.KIM_ComputeArguments_SetArgumentPointerDouble(
-        args.p::Ptr{Cvoid}, arg_name::Cint, ptr::Ptr{Cdouble})::Cint
-    
+        args.p::Ptr{Cvoid},
+        arg_name::Cint,
+        ptr::Ptr{Cdouble},
+    )::Cint
+
     if error_code != 0
         error("SetArgumentPointerDouble failed for $(arg_name)")
     end
@@ -267,9 +292,9 @@ end
 Execute the model computation.
 """
 function compute!(model::Model, args::ComputeArguments)
-    error_code = @ccall libkim.KIM_Model_Compute(
-        model.p::Ptr{Cvoid}, args.p::Ptr{Cvoid})::Cint
-    
+    error_code =
+        @ccall libkim.KIM_Model_Compute(model.p::Ptr{Cvoid}, args.p::Ptr{Cvoid})::Cint
+
     if error_code != 0
         error("Model compute failed with error code: $error_code")
     end
@@ -281,13 +306,21 @@ end
 
 Set a callback function pointer.
 """
-function set_callback_pointer!(args::ComputeArguments, callback::ComputeCallbackName,
-                              language::LanguageName, func_ptr::Ptr{Cvoid}, 
-                              data_ptr::Ptr{Cvoid})
+function set_callback_pointer!(
+    args::ComputeArguments,
+    callback::ComputeCallbackName,
+    language::LanguageName,
+    func_ptr::Ptr{Cvoid},
+    data_ptr::Ptr{Cvoid},
+)
     error_code = @ccall libkim.KIM_ComputeArguments_SetCallbackPointer(
-        args.p::Ptr{Cvoid}, callback::Cint, language::Cint,
-        func_ptr::Ptr{Cvoid}, data_ptr::Ptr{Cvoid})::Cint
-    
+        args.p::Ptr{Cvoid},
+        callback::Cint,
+        language::Cint,
+        func_ptr::Ptr{Cvoid},
+        data_ptr::Ptr{Cvoid},
+    )::Cint
+
     if error_code != 0
         error("SetCallbackPointer failed for $(callback)")
     end

@@ -102,11 +102,11 @@ end
 
 # Unit style combinations
 const UNIT_STYLES = (
-    metal =    (length=A, energy=eV, charge=e, temperature=K, time=ps),
-    real =     (length=A, energy=kcal_mol, charge=e, temperature=K, time=fs),
-    si =       (length=m, energy=J, charge=C, temperature=K, time=s),
-    cgs =      (length=cm, energy=erg, charge=statC, temperature=K, time=s),
-    electron = (length=Bohr, energy=Hartree, charge=e, temperature=K, time=fs)
+    metal = (length = A, energy = eV, charge = e, temperature = K, time = ps),
+    real = (length = A, energy = kcal_mol, charge = e, temperature = K, time = fs),
+    si = (length = m, energy = J, charge = C, temperature = K, time = s),
+    cgs = (length = cm, energy = erg, charge = statC, temperature = K, time = s),
+    electron = (length = Bohr, energy = Hartree, charge = e, temperature = K, time = fs),
 )
 
 function get_lammps_style_units(units::Symbol)
@@ -261,15 +261,31 @@ function compute_argument_name_to_string(value::Integer)
 end
 
 # Export all structures
-export Numbering, LengthUnit, EnergyUnit, ChargeUnit,
-       TemperatureUnit, TimeUnit, ComputeArgumentName,
-       ComputeCallbackName, LanguageName, SupportStatus,
-        UNIT_STYLES
+export Numbering,
+    LengthUnit,
+    EnergyUnit,
+    ChargeUnit,
+    TemperatureUnit,
+    TimeUnit,
+    ComputeArgumentName,
+    ComputeCallbackName,
+    LanguageName,
+    SupportStatus,
+    UNIT_STYLES
 
 # Export all functions
-export get_numbering, get_length_unit, get_energy_unit, get_charge_unit,
-       get_temperature_unit, get_time_unit, get_compute_argument_name,
-       get_compute_callback_name, get_language_name, get_support_status,
-       get_lammps_style_units,
-       numbering_to_string, length_unit_to_string, energy_unit_to_string,
-       compute_argument_name_to_string
+export get_numbering,
+    get_length_unit,
+    get_energy_unit,
+    get_charge_unit,
+    get_temperature_unit,
+    get_time_unit,
+    get_compute_argument_name,
+    get_compute_callback_name,
+    get_language_name,
+    get_support_status,
+    get_lammps_style_units,
+    numbering_to_string,
+    length_unit_to_string,
+    energy_unit_to_string,
+    compute_argument_name_to_string

@@ -68,13 +68,15 @@ A function `f(species, positions, cell, pbc)` that:
 
 # Example
 ```julia
+using KIM, StaticVectors, LinearAlgebra
+
 # Create model function
-model = KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006")
+model = KIM.KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006")
 
 # Define system
 species = ["Si", "Si"]
 positions = [SVector(0.0, 0.0, 0.0), SVector(1.0, 1.0, 1.0)]
-cell = 5.43 * I(3)  # Silicon lattice parameter
+cell = Matrix(5.43 * I(3))  # Silicon lattice parameter
 pbc = [true, true, true]
 
 # Compute properties
@@ -89,18 +91,22 @@ println("Forces: ", results[:forces])
 - Handles multiple cutoff distances if required by the model
 - Uses zero-based indexing internally to match KIM-API conventions
 """
-function KIMModel(model_name::String; 
-                  units::Union{Symbol, NamedTuple} = :metal,
-                  neighbor_function=nothing, #TODO: Handle neighbor function properly
-                  compute=[:energy, :forces])
+function KIMModel(
+    model_name::String;
+    units::Union{Symbol,NamedTuple} = :metal,
+    neighbor_function = nothing, #TODO: Handle neighbor function properly
+    compute = [:energy, :forces],
+)
     # Initialize model
-    local units_in 
+    local units_in
     if units isa Symbol
         units_in = get_lammps_style_units(units)
     elseif units isa NamedTuple
         # Ensure units are in correct order
         if length(units) != 5
-            error("Units tuple must have exactly 5 elements: (length_unit, energy_unit, charge_unit, temperature_unit, time_unit)")
+            error(
+                "Units tuple must have exactly 5 elements: (length_unit, energy_unit, charge_unit, temperature_unit, time_unit)",
+            )
         end
         sorted_units = []
         for unit_order in [:length, :energy, :charge, :temperature, :time]
@@ -110,33 +116,34 @@ function KIMModel(model_name::String;
     else
         error("Invalid units type. Must be Symbol or NamedTuple.")
     end
-    
-    model, accepted = create_model(Numbering(0), #TODO use one based numbering
-                                   units_in...,
-                                   model_name)
+
+    model, accepted = create_model(
+        Numbering(0), #TODO use one based numbering
+        units_in...,
+        model_name,
+    )
     if !accepted
         error("Units not accepted")
     end
-    
+
     args = create_compute_arguments(model)
-    # println("Created compute arguments: $args")
-#    # Check support status
-   supports_energy = notSupported
-   supports_forces = notSupported
-#    
-   if :energy in compute
-       supports_energy = get_argument_support_status(args, partialEnergy)
-       if supports_energy == notSupported
-           error("Model does not support energy computation")
-       end
-   end
-#
-   if :forces in compute
-       supports_forces = get_argument_support_status(args, partialForces)
-       if supports_forces == notSupported
-           error("Model does not support forces computation")
-       end
-   end
+    # Check support status
+    supports_energy = notSupported
+    supports_forces = notSupported
+
+    if :energy in compute
+        supports_energy = get_argument_support_status(args, partialEnergy)
+        if supports_energy == notSupported
+            error("Model does not support energy computation")
+        end
+    end
+
+    if :forces in compute
+        supports_forces = get_argument_support_status(args, partialForces)
+        if supports_forces == notSupported
+            error("Model does not support forces computation")
+        end
+    end
 
     if length(compute) == 0
         error("At least one compute argument must be requested: :energy or :forces")
@@ -150,82 +157,76 @@ function KIMModel(model_name::String;
     # Set neighbor callback if provided
     n_cutoffs = 0
     cutoffs = Float64[]
-    will_not_request_ghost_neigh = Int32[]
-    
+    will_not_request_ghost_neigh = true
+
     if neighbor_function === nothing
         # default neighbor function
         n_cutoffs, cutoffs, will_not_request_ghost_neigh = get_neighbor_list_pointers(model)
-        # println("Model needs $n_cutoffs neighbor lists with cutoffs: $cutoffs")
     else
         error("TODO: Handle custom neighbor function")
     end
 
-    
+
     species_support_map = get_species_map_closure(model)
 
     # Return closure
     return function _compute_model(species, positions, cell, pbc)
         # Create neighbor lists if needed
         if neighbor_function === nothing
-            containers, all_positions, all_species, contributing, atom_indices = 
-                create_kim_neighborlists(positions, cutoffs, species;
-                cell=cell, pbc=pbc, 
-                will_not_request_ghost_neigh=will_not_request_ghost_neigh)
-            # println("Created neighbor lists with $(all_positions) total positions including ghosts. $(containers)")
+            containers, coords, all_species, contributing, atom_indices =
+                create_kim_neighborlists(
+                    species,
+                    positions,
+                    cell,
+                    pbc,
+                    cutoffs;
+                    will_not_request_ghost_neigh = will_not_request_ghost_neigh,
+                )
         else
             error("TODO: Neighbor function is not provided.")
         end
-        
         particle_species_codes = species_support_map(all_species)
         # Set pointers
-        
-        coords = reduce(hcat, all_positions) # Vector{SVector} to Matrix{Cdouble/Float64}
+
         n = size(coords, 2)
-
         n_ref = Ref{Cint}(n)
-        # println("args", args)
-        # args = create_compute_arguments(model)
-
-        # TODO: This energy and forces pointer have to be created here only
-        # otherwise it will not work
-        # Discuss with Ryan regarding the pointer creation
-        # Or run with address sanitizer. Possible memory leak? 
-        energy = Ref{Cdouble}(0.0)
+        energy_ref = Ref{Cdouble}(0.0)
         forces = zeros(3, n)
+
         set_argument_pointer!(args, numberOfParticles, n_ref)
         set_argument_pointer!(args, particleSpeciesCodes, particle_species_codes)
         set_argument_pointer!(args, coordinates, coords)
         set_argument_pointer!(args, particleContributing, contributing)
-        
+
         if :energy in compute && supports_energy != notSupported
-            set_argument_pointer!(args, partialEnergy, energy)
+            set_argument_pointer!(args, partialEnergy, energy_ref)
         end
-        
+
         if :forces in compute && supports_forces != notSupported
             set_argument_pointer!(args, partialForces, forces)
         end
         # Results storage
-        
+
         results = Dict{Symbol,Any}()
 
         # Set neighbor list if provided
         if neighbor_function === nothing
-            GC.@preserve containers coords forces energy all_positions particle_species_codes begin
+            GC.@preserve containers coords forces energy_ref n n_ref particle_species_codes begin
                 fptr = @cast_as_kim_neigh_fptr(kim_neighbors_callback)
-                data_obj_ptr = pointer_from_objref(containers)                            
+                data_obj_ptr = pointer_from_objref(containers)
                 set_callback_pointer!(args, GetNeighborList, c, fptr, data_obj_ptr)
                 compute!(model, args)
             end
         else
             error("TODO: Handle custom neighbor function")
-        end        
-        #if :energy in compute && supports_energy != notSupported
-            results[:energy] = energy[]
-        #end
-        
-        #if :forces in compute && supports_forces != notSupported
+        end
+        if :energy in compute && supports_energy != notSupported
+            results[:energy] = energy_ref[]
+        end
+
+        if :forces in compute && supports_forces != notSupported
             results[:forces] = add_forces(forces, atom_indices)
-        #end
+        end
         return results
     end
 end

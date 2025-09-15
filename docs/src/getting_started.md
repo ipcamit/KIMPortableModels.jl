@@ -1,6 +1,6 @@
 # Getting Started
 
-This guide will help you get up and running with kim_api.jl.
+This guide will help you get up and running with KIM.jl.
 
 ## Installation
 
@@ -14,20 +14,20 @@ Easiest way to install KIM-API is via Conda:
 ```bash
 conda create -n kim-api kim-api=2.4 -c conda-forge
 conda activate kim-api
-export KIM_API_LIB=${CONDA_PREFIX}/lib/libkim-api.so # for kim_api.jl to find the library
+export KIM_API_LIB=${CONDA_PREFIX}/lib/libkim-api.so # for KIM.jl to find the library
 ```
 
-### Step 2: Install kim_api.jl
+### Step 2: Install KIM.jl
 
 ```julia
 using Pkg
-Pkg.add(url="https://github.com/ipcamit/kim_api.jl.git")
+Pkg.add(url="https://github.com/ipcamit/KIM.jl.git")
 ```
 
 ### Step 3: Test Installation
 
 ```julia
-using kim_api
+using KIM
 
 # This should not throw an error
 println("KIM-API library loaded successfully!")
@@ -44,12 +44,12 @@ export KIM_API_LIB="/path/to/libkim-api.so"
 Let's compute the energy and forces for a simple silicon system using the Stillinger-Weber potential.
 
 ```julia
-using kim_api
+using KIM
 using StaticArrays
 using LinearAlgebra
 
 # Create a KIM model
-model = kim_api.KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006")
+model = KIM.KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006")
 
 # Define a simple silicon system
 species = ["Si", "Si"]
@@ -97,7 +97,7 @@ KIM-API provides access to hundreds of validated interatomic models. You can bro
 
 ```julia
 # Copper using EAM potential
-cu_model = kim_api.KIMModel("EAM_Dynamo_MendelevSordeletKramer_2007_CuZr__MO_120596890176_005")
+cu_model = KIM.KIMModel("EAM_Dynamo_MendelevSordeletKramer_2007_CuZr__MO_120596890176_005")
 
 # Define copper system
 cu_species = ["Cu", "Cu", "Cu", "Cu"]
@@ -122,14 +122,14 @@ Energy: 3.834811682114341 eV
 
 ## Unit Systems
 
-kim_api.jl supports multiple unit systems. The default is `:metal` (LAMMPS metal units):
+KIM.jl supports multiple unit systems. The default is `:metal` (LAMMPS metal units):
 
 ```julia
 # Explicit unit specification
-model_real = kim_api.KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006", 
+model_real = KIM.KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006", 
                       units=:real)  # kcal/mol, Å, fs
 
-model_si = kim_api.KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006",
+model_si = KIM.KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006",
                     units=:si)    # J, m, s
 ```
 
@@ -144,8 +144,8 @@ model_si = kim_api.KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006",
 You can also specify custom collection of units by passing a tuple of units during model creation:
 
 ```julia
-custom_units = (length=kim_api.A, energy=kim_api.eV, time=kim_api.fs, charge=kim_api.e, temperature=kim_api.K)
-model_custom = kim_api.KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006", 
+custom_units = (length=KIM.A, energy=KIM.eV, time=KIM.fs, charge=KIM.e, temperature=KIM.K)
+model_custom = KIM.KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006", 
                         units=custom_units)
 ```
 
@@ -157,7 +157,7 @@ Creating a KIM model has overhead, so reuse the function:
 
 ```julia
 # Good: create once
-model = kim_api.KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006")
+model = KIM.KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006")
 
 # Use many times
 for configuration in configurations

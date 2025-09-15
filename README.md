@@ -1,4 +1,4 @@
-# kim_api.jl
+# KIM.jl
 
 <p align="center">
 <img src="./kimapijl.png" alt="KIM API JL Logo" width="300" />
@@ -8,11 +8,14 @@ Julia interface to the [KIM-API](https:https://kim-api.readthedocs.io) (Knowledg
 This is a low-level interface to the KIM-API, allowing you to access interatomic models directly from Julia.
 Think of it as the Julia equivalent of the KIMPY Python package.
 
+[Documentation](https://ipcamit.github.io/KIM.jl/)
+
 ## Installation
 
 ```julia
 using Pkg
-Pkg.develop(path="/path/to/kim_api.jl")
+# KIMNeighborList.jl should be available as a local dependency
+Pkg.develop(path="/path/to/KIM.jl")
 ```
 
 ## Quick Start
@@ -20,17 +23,17 @@ Pkg.develop(path="/path/to/kim_api.jl")
 Export the location of the KIM-API library:
 
 ```shell
-export KIM_API_LIB=/path/to/kim_api.so
+export KIM_API_LIB=/path/to/libkim-api.so
 ```
 
 Then, you can use the package as follows:
 
 ```julia
-using kim_api
+using KIM
 using StaticArrays
 
 # Create a model
-model = kim_api.KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006")
+model = KIM.KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006")
 
 # Setup atoms
 positions = [SVector(0.0, 0.0, 0.0), SVector(2.7, 2.7, 0.0)]
@@ -55,12 +58,12 @@ forces = results[:forces]
 
 - Julia 1.10+
 - KIM-API library (for model calculations)
-- NeighbourLists.jl, StaticArrays.jl
+- KIMNeighborList.jl (C++ backend), StaticArrays.jl
 
 
 ## Documentation
 
-Full documentation is available at [https://gupta839.github.io/kim_api.jl/](https://gupta839.github.io/kim_api.jl/)
+Full documentation is available at [https://ipcamit.github.io/KIM.jl/](https://ipcamit.github.io/KIM.jl/)
 
 ## Testing
 
@@ -68,7 +71,7 @@ Run the test suite with:
 
 ```julia
 using Pkg
-Pkg.test("kim_api")
+Pkg.test("KIM")
 ```
 
 ## TODO

@@ -1,14 +1,14 @@
-using Documenter, kim_api
+using Documenter, KIM
 
 # Set up documentation
 makedocs(
-    modules = [kim_api],
-    sitename = "kim_api.jl",
+    modules = [KIM],
+    sitename = "KIM.jl",
     authors = "Amit Gupta <gupta839@umn.edu>",
     format = Documenter.HTML(
         prettyurls = get(ENV, "CI", "false") == "true",
-        canonical = "https://ipcamit.github.io/kim_api.jl",
-        assets = String[]
+        canonical = "https://ipcamit.github.io/KIM.jl",
+        assets = String[],
     ),
     pages = [
         "Home" => "index.md",
@@ -16,26 +16,26 @@ makedocs(
         # "Tutorial" => "tutorial.md",
         "API Reference" => [
             "High-level Interface" => "api/highlevel.md",
-            "Model Management" => "api/model.md", 
+            "Model Management" => "api/model.md",
             "Species Handling" => "api/species.md",
             "Neighbor Lists" => "api/neighborlist.md",
             "Constants & Units" => "api/constants.md",
-            "Utilities" => "api/utils.md"
+            "Utilities" => "api/utils.md",
         ],
         "Examples" => "examples.md",
         # "Troubleshooting" => "troubleshooting.md",
         # "Developer Guide" => "developer.md"
     ],
-    repo = "https://github.com/ipcamit/kim_api.jl/blob/{commit}{path}#L{line}",
+    repo = "https://github.com/ipcamit/KIM.jl/blob/{commit}{path}#L{line}",
     clean = true,
     doctest = false,
-    linkcheck = false
+    linkcheck = false,
 )
 
 # Deploy documentation
 deploydocs(
-    repo = "github.com/ipcamit/kim_api.jl.git",
+    repo = "github.com/ipcamit/KIM.jl.git",
     target = "build",
     branch = "gh-pages",
-    devbranch = "master"
+    devbranch = "master",
 )
