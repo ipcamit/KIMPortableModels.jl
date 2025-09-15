@@ -104,6 +104,15 @@ function create_model(
     time_unit::TimeUnit,
     model_name::String,
 )
+    if is_kim_available() == false
+        error("""
+              ==================================================================
+              KIM-API library is not available;
+              Please intall KIM-API and set the KIM_API_LIB environment variable. 
+              e.g. export KIM_API_LIB=/path/to/libkim-api.so
+              ==================================================================
+              """)
+    end
     model = Model()
     units_accepted = Ref{Cint}()
 

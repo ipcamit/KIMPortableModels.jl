@@ -21,14 +21,27 @@ and the KIM_API_LIB environment variable is not set.
 _libkim = get(ENV, "KIM_API_LIB", find_library(["kim-api", "libkim-api"]))
 
 if _libkim == ""
-    error("""
+    println("""\033[1;31m
+    ====================================================================
+    WARNING:
+    ====================================================================
     KIM-API library not found in system paths.
     Please set the environment variable KIM_API_LIB to the library path:
 
     ENV["KIM_API_LIB"] = "/path/to/libkim-api.so"
 
     Or install KIM-API and ensure it's in your system library path.
+    OTHERWISE, KIM-API FUCNTIONALITY WILL NOT WORK AT RUNTIME.
+    ====================================================================
+    For more information, visit:
+    www.openkim.org; kim-api.readthedocs.io
+    ====================================================================
+    \033[0m
     """)
 end
 
 const libkim = _libkim
+
+function is_kim_available()
+    return libkim != ""
+end
