@@ -303,14 +303,14 @@ end
     get_static_species_map(model::Model, species_list::Vector{String}) -> Vector{Cint}
     Get a static closure that maps species strings to their codes.
 """
-function get_species_map_closure(model::Model; species_type::Symbol = :number)
+@inline function get_species_map_closure(model::Model; species_type::Symbol = :number)
 
     species_map = get_supported_species_map(model; species_type = species_type)
 
     if species_type == :symbol
         return function (species_list::Vector{String})
             species_codes = Vector{Cint}(undef, length(species_list))
-            for (i, str) in enumerate(species_list)
+            @inbounds for (i, str) in enumerate(species_list)
                 species_codes[i] = get(species_map, str, -1)  # -1 if not found
             end
             return species_codes
@@ -318,7 +318,7 @@ function get_species_map_closure(model::Model; species_type::Symbol = :number)
     elseif species_type == :number
         return function (species_list::Vector{<:Integer})
             species_codes = Vector{Cint}(undef, length(species_list))
-            for (i, str) in enumerate(species_list)
+            @inbounds for (i, str) in enumerate(species_list)
                 species_codes[i] = get(species_map, str, -1)  # -1 if not found
             end
             return species_codes

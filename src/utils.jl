@@ -46,9 +46,10 @@ into a single destination array based on the provided indices.
 - The destination array is initialized to zero before accumulation.
 ```
 """
-function add_forces(src::AbstractArray, idx::AbstractArray{<:Integer})
-    dest = similar(src, eltype(src), (3, maximum(idx)))
-    fill!(dest, zero(eltype(src)))
+@inline function add_forces(src::AbstractArray{T}, idx::AbstractArray{<:Integer}) where T
+    max_idx = maximum(idx)
+    dest = similar(src, T, (3, max_idx))
+    fill!(dest, zero(T))
     scatter_add!(dest, src, idx, dims = 2)
     return dest
 end

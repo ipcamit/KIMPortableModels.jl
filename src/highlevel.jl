@@ -28,6 +28,10 @@ same model, the returned function closure maintains state to minimize
 overhead.
 """
 
+import AtomsBase
+import AtomsCalculators
+using Unitful: ustrip, Quantity
+
 """
     KIMModel(model_name::String; units=:metal, neighbor_function=nothing, compute=[:energy, :forces]) -> Function
 
@@ -230,3 +234,134 @@ function KIMModel(
         return results
     end
 end
+
+"""
+    KIMCalculator(model_name::String; kwargs...) -> AtomsCalculators.AbstractCalculator
+
+Create a simple `AtomsCalculators`-compatible calculator that wraps a KIM model.
+
+This provides a minimal interface to KIM models that works with the AtomsCalculators
+ecosystem. The calculator can compute energies and forces for AtomsBase systems.
+
+# Arguments
+- `model_name::String`: KIM model identifier
+
+# Keyword Arguments
+- `units::Symbol`: Unit system (default: `:metal`)
+- `compute::Vector{Symbol}`: Properties to compute (default: `[:energy, :forces]`)
+
+# Example
+```julia
+using AtomsBase, AtomsCalculators
+calc = KIMCalculator("SW_StillingerWeber_1985_Si__MO_405512056662_006")
+energy = AtomsCalculators.potential_energy(calc, system)
+forces = AtomsCalculators.forces(calc, system)
+```
+"""
+struct KIMCalculator
+    model_name::String
+    model_fn::Function
+end
+
+function KIMCalculator(model_name::String; kwargs...)
+    model_fn = KIMModel(model_name; kwargs...)
+    return KIMCalculator(model_name, model_fn)
+end
+
+# Direct call interface - compute everything and return dict
+(calc::KIMCalculator)(system) = _evaluate_system(calc, system)
+
+# AtomsCalculators interface
+AtomsCalculators.potential_energy(calc::KIMCalculator, system) =
+    _evaluate_system(calc, system)[:energy]
+
+AtomsCalculators.forces(calc::KIMCalculator, system) =
+    _evaluate_system(calc, system)[:forces]
+
+# Internal evaluation
+@inline function _evaluate_system(calc::KIMCalculator, system)
+    # Handle different AtomsBase system types
+    local species::Vector{String}, positions::Vector{SVector{3,Float64}}, cell::Matrix{Float64}, pbc::Vector{Bool}
+
+    if hasfield(typeof(system), :particles)
+        # FlexibleSystem - extract from particles
+        n_particles = length(system.particles)
+        species = Vector{String}(undef, n_particles)
+        positions = Vector{SVector{3,Float64}}(undef, n_particles)
+
+        @inbounds for (i, p) in enumerate(system.particles)
+            species[i] = String(p.first)
+            positions[i] = SVector{3,Float64}(_strip_units.(p.second))
+        end
+    else
+        # Try standard AtomsBase interface
+        try
+            raw_species = AtomsBase.chemical_symbols(system)
+            raw_positions = AtomsBase.positions(system)
+            n_particles = length(raw_species)
+
+            species = Vector{String}(undef, n_particles)
+            positions = Vector{SVector{3,Float64}}(undef, n_particles)
+
+            @inbounds for i in 1:n_particles
+                species[i] = String(raw_species[i])
+                positions[i] = SVector{3,Float64}(_strip_units.(raw_positions[i]))
+            end
+        catch
+            error("Cannot extract species and positions from system of type $(typeof(system))")
+        end
+    end
+
+    # Handle cell matrix
+    try
+        if hasmethod(AtomsBase.cell_vectors, Tuple{typeof(system)})
+            # Use cell_vectors if available
+            vecs = AtomsBase.cell_vectors(system)
+            cell = Matrix{Float64}(undef, 3, 3)
+            @inbounds for (j, v) in enumerate(vecs)
+                for i in 1:3
+                    cell[i, j] = Float64(_strip_units(v[i]))
+                end
+            end
+        else
+            # Fall back to cell matrix
+            raw_cell = AtomsBase.cell(system)
+            cell = Matrix{Float64}(undef, 3, 3)
+            @inbounds for i in 1:3, j in 1:3
+                cell[i, j] = Float64(_strip_units(raw_cell[i, j]))
+            end
+        end
+    catch
+        error("Cannot extract cell information from system of type $(typeof(system))")
+    end
+
+    # Get boundary conditions
+    try
+        if hasmethod(AtomsBase.periodicity, Tuple{typeof(system)})
+            raw_pbc = AtomsBase.periodicity(system)
+            pbc = Vector{Bool}(undef, 3)
+            @inbounds for i in 1:3
+                pbc[i] = Bool(raw_pbc[i])
+            end
+        elseif hasmethod(AtomsBase.boundary_conditions, Tuple{typeof(system)})
+            raw_pbc = AtomsBase.boundary_conditions(system)
+            pbc = Vector{Bool}(undef, 3)
+            @inbounds for i in 1:3
+                pbc[i] = Bool(raw_pbc[i])
+            end
+        else
+            pbc = Bool[false, false, false]  # Default to non-periodic
+        end
+    catch
+        pbc = Bool[false, false, false]  # Default to non-periodic
+    end
+
+    return calc.model_fn(species, positions, cell, pbc)
+end
+
+# Helper function to strip units
+@inline _strip_units(x::Quantity) = Float64(x.val)
+@inline _strip_units(x::Number) = Float64(x)
+
+# Export high-level interface
+export KIMModel, KIMCalculator

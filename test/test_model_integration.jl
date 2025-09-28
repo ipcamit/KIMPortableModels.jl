@@ -108,13 +108,13 @@
                     @test haskey(species_map, "Si")
                     @test species_map["Si"] == species_codes[1]
 
-                    # Test supported species map  
-                    supported_map = KIMPortableModels.get_supported_species_map(model)
+                    # Test supported species map
+                    supported_map = KIMPortableModels.get_supported_species_map(model; species_type=:symbol)
                     @test haskey(supported_map, "Si")
                     @test supported_map["Si"] isa Int32
 
-                    # Test species map closure
-                    map_closure = KIMPortableModels.get_species_map_closure(model)
+                    # Test species map closure with symbol type
+                    map_closure = KIMPortableModels.get_species_map_closure(model; species_type=:symbol)
                     closure_codes = map_closure(species_list)
                     @test closure_codes == species_codes
 

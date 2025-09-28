@@ -18,7 +18,7 @@ and the KIM_API_LIB environment variable is not set.
 """
 
 # Try to find library automatically
-_libkim = get(ENV, "KIM_API_LIB", find_library(["kim-api", "libkim-api"]))
+_libkim = get(ENV, "KIM_API_LIB", dlpath(find_library(["kim-api", "libkim-api"])))
 
 if _libkim == ""
     println("""\033[1;31m

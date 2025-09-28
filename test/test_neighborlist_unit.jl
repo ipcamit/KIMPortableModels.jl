@@ -1,5 +1,8 @@
 # test_neighborlist_unit.jl - Unit tests for neighbor list functionality
 
+using StaticArrays
+using LinearAlgebra
+
 @testset "Neighbor List Unit Tests" begin
 
     @testset "NeighborListContainer Construction" begin
