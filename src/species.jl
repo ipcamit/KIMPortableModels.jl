@@ -313,6 +313,9 @@ end
             @inbounds for (i, str) in enumerate(species_list)
                 species_codes[i] = get(species_map, str, -1)  # -1 if not found
             end
+            if any(x -> x == -1, species_codes)
+                error("One or more species not supported by model")
+            end
             return species_codes
         end
     elseif species_type == :number
@@ -320,6 +323,9 @@ end
             species_codes = Vector{Cint}(undef, length(species_list))
             @inbounds for (i, str) in enumerate(species_list)
                 species_codes[i] = get(species_map, str, -1)  # -1 if not found
+            end
+            if any(x -> x == -1, species_codes)
+                error("One or more species not supported by model")
             end
             return species_codes
         end

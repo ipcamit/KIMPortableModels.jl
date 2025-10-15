@@ -35,22 +35,26 @@ export KIM_API_LIB=/path/to/libkim-api.so
 Then, you can use the package as follows:
 
 ```julia
-using KIMPortableModels
-using StaticArrays
+using KIMPortableModels, StaticArrays, LinearAlgebra
 
-# Create a model
+# Create model function
 model = KIMPortableModels.KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006")
 
-# Setup atoms
-positions = [SVector(0.0, 0.0, 0.0), SVector(2.7, 2.7, 0.0)]
+# Define system
 species = ["Si", "Si"]
-cell = [5.43 0.0 0.0; 0.0 5.43 0.0; 0.0 0.0 5.43]
+positions = [
+    SVector(0.    , 0.    , 0.    ),
+    SVector(1.3575, 1.3575, 1.3575),
+]
+cell = Matrix([[0.0 2.715 2.715] 
+               [2.715 0.0 2.715] 
+               [2.715 2.715 0.0]])
 pbc = [true, true, true]
 
-# Calculate
+# Compute properties
 results = model(species, positions, cell, pbc)
-energy = results[:energy]
-forces = results[:forces]
+println("Energy: ", results[:energy])
+println("Forces: ", results[:forces])
 ```
 
 ## Features

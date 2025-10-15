@@ -17,21 +17,26 @@ interatomic models available through the OpenKIM framework.
 
 # Quick Start
 ```julia
-using KIMPortableModels
+using KIMPortableModels, StaticArrays, LinearAlgebra
 
-# Create a model function
+# Create model function
 model = KIMPortableModels.KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006")
 
-# Define atomic system
+# Define system
 species = ["Si", "Si"]
-positions = [SVector(0.0, 0.0, 0.0), SVector(2.7, 2.7, 2.7)]
-cell = 5.43 * I(3)  # Silicon diamond structure
+positions = [
+    SVector(0.    , 0.    , 0.    ),
+    SVector(1.3575, 1.3575, 1.3575),
+]
+cell = Matrix([[0.0 2.715 2.715] 
+               [2.715 0.0 2.715] 
+               [2.715 2.715 0.0]])
 pbc = [true, true, true]
 
-# Compute energy and forces
+# Compute properties
 results = model(species, positions, cell, pbc)
-println("Energy: \$(results[:energy]) eV")
-println("Forces: \$(results[:forces])")
+println("Energy: ", results[:energy])
+println("Forces: ", results[:forces])
 ```
 
 # Modules
@@ -88,4 +93,8 @@ include("species.jl") # All the species related functions
 include("neighborlist.jl") # Functions for creating neighbor lists
 
 include("highlevel.jl") # Actual high-level API for model computation
+
+function __init__()
+    refresh_libkim!(warn_if_missing = true)
+end
 end

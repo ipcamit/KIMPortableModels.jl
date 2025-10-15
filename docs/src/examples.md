@@ -54,7 +54,7 @@ cell_vectors = (
     SVector(0.0u"Å", 0.0u"Å", 10.0u"Å")
 )
 
-system = FlexibleSystem(particles; cell_vectors=cell_vectors, periodicity=(true, true, true))
+system = FlexibleSystem(particles; cell_vectors=cell_vectors, periodicity=(true, true, true));
 
 # Use AtomsCalculators interface
 energy = AtomsCalculators.potential_energy(calc, system)
@@ -126,7 +126,7 @@ cell_vectors = (
     SVector(0.0u"Å", 5.43u"Å", 0.0u"Å"),
     SVector(0.0u"Å", 0.0u"Å", 5.43u"Å")
 )
-system = FlexibleSystem(particles; cell_vectors=cell_vectors, periodicity=(true, true, true))
+system = FlexibleSystem(particles; cell_vectors=cell_vectors, periodicity=(true, true, true));
 atomsbase_results = calc(system)
 
 # Verify equivalence

@@ -16,7 +16,7 @@ a clean functional interface for energy and force calculations.
 # Design Philosophy
 The high-level interface follows Julia conventions:
 - Uses keyword arguments for optional parameters
-- Returns structured results in dictionaries
+- Returns structured results as `NamedTuple`s
 - Automatically handles unit conversions and species mapping
 - Provides sensible defaults for common use cases
 - Supports both energy-only and energy+forces calculations
@@ -25,7 +25,7 @@ The high-level interface follows Julia conventions:
 The high-level interface pre-computes species mappings and neighbor
 list structures for efficiency. For repeated calculations with the
 same model, the returned function closure maintains state to minimize
-overhead.
+overhead while returning typed `NamedTuple` results for performance.
 """
 
 import AtomsBase
@@ -65,22 +65,27 @@ A function `f(species, positions, cell, pbc)` that:
   - `cell::Matrix{Float64}`: Unit cell matrix (3×3)
   - `pbc::Vector{Bool}`: Periodic boundary conditions [x,y,z]
 - Returns:
-  - `Dict{Symbol,Any}`: Results with keys `:energy` and/or `:forces`
+  - `NamedTuple`: Results with fields `:energy` and/or `:forces`
 
 # Throws
 - `ErrorException`: If model creation fails or requested properties not supported
 
 # Example
 ```julia
-using KIMPortableModels, StaticVectors, LinearAlgebra
+using KIMPortableModels, StaticArrays, LinearAlgebra
 
 # Create model function
 model = KIMPortableModels.KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006")
 
 # Define system
 species = ["Si", "Si"]
-positions = [SVector(0.0, 0.0, 0.0), SVector(1.0, 1.0, 1.0)]
-cell = Matrix(5.43 * I(3))  # Silicon lattice parameter
+positions = [
+    SVector(0.    , 0.    , 0.    ),
+    SVector(1.3575, 1.3575, 1.3575),
+]
+cell = Matrix([[0.0 2.715 2.715] 
+               [2.715 0.0 2.715] 
+               [2.715 2.71, 0.0]])
 pbc = [true, true, true]
 
 # Compute properties
@@ -173,16 +178,23 @@ function KIMModel(
 
     species_support_map = get_species_map_closure(model)
 
+    energy_requested = (:energy in compute) && supports_energy != notSupported
+    forces_requested = (:forces in compute) && supports_forces != notSupported
+
+    fptr = @cast_as_kim_neigh_fptr(kim_neighbors_callback)
+
     # Return closure
     return function _compute_model(species, positions, cell, pbc)
+        species_vec, positions_vec, cell_mat, pbc_vec =
+            _normalize_kim_inputs(species, positions, cell, pbc)
         # Create neighbor lists if needed
         if neighbor_function === nothing
             containers, coords, all_species, contributing, atom_indices =
                 create_kim_neighborlists(
-                    species,
-                    positions,
-                    cell,
-                    pbc,
+                    species_vec,
+                    positions_vec,
+                    cell_mat,
+                    pbc_vec,
                     cutoffs;
                     will_not_request_ghost_neigh = will_not_request_ghost_neigh,
                 )
@@ -209,14 +221,9 @@ function KIMModel(
         if :forces in compute && supports_forces != notSupported
             set_argument_pointer!(args, partialForces, forces)
         end
-        # Results storage
-
-        results = Dict{Symbol,Any}()
-
         # Set neighbor list if provided
         if neighbor_function === nothing
             GC.@preserve containers coords forces energy_ref n n_ref particle_species_codes begin
-                fptr = @cast_as_kim_neigh_fptr(kim_neighbors_callback)
                 data_obj_ptr = pointer_from_objref(containers)
                 set_callback_pointer!(args, GetNeighborList, c, fptr, data_obj_ptr)
                 compute!(model, args)
@@ -224,14 +231,16 @@ function KIMModel(
         else
             error("TODO: Handle custom neighbor function")
         end
-        if :energy in compute && supports_energy != notSupported
-            results[:energy] = energy_ref[]
-        end
 
-        if :forces in compute && supports_forces != notSupported
-            results[:forces] = add_forces(forces, atom_indices)
+        if energy_requested && forces_requested
+            return (energy = energy_ref[], forces = add_forces(forces, atom_indices))
+        elseif energy_requested
+            return (energy = energy_ref[],)
+        elseif forces_requested
+            return (forces = add_forces(forces, atom_indices),)
+        else
+            error("No supported compute arguments requested.")
         end
-        return results
     end
 end
 
@@ -264,8 +273,43 @@ struct KIMCalculator
 end
 
 function KIMCalculator(model_name::String; kwargs...)
-    model_fn = KIMModel(model_name; kwargs...)
-    return KIMCalculator(model_name, model_fn)
+    return KIMCalculator(model_name, KIMModel(model_name; kwargs...))
+end
+
+# Direct species/positions interface (e.g. Molly.jl)
+function (calc::KIMCalculator)(
+    species::AbstractVector,
+    positions::AbstractVector,
+    cell::AbstractMatrix,
+    pbc::AbstractVector;
+    kwargs...,
+)
+    isempty(kwargs) || error("Unsupported keyword arguments: $(collect(keys(kwargs)))")
+    return calc.model_fn(_normalize_kim_inputs(species, positions, cell, pbc)...)
+end
+
+@inline function _normalize_kim_inputs(species, positions, cell, pbc)
+    n = length(species)
+    length(positions) == n ||
+        throw(ArgumentError("length of species ($(n)) and positions ($(length(positions))) must match"))
+    size(cell, 1) == 3 && size(cell, 2) == 3 ||
+        throw(ArgumentError("cell must be a 3×3 matrix, got size $(size(cell))"))
+    length(pbc) == 3 || throw(ArgumentError("pbc must have length 3, got $(length(pbc))"))
+
+    species_vec = [String(sp) for sp in species]
+    positions_vec = [_vec3(pos) for pos in positions]
+
+    cell_mat = Matrix{Float64}(undef, 3, 3)
+    @inbounds for j in 1:3
+        col = _vec3(view(cell, :, j))
+        for i in 1:3
+            cell_mat[i, j] = col[i]
+        end
+    end
+
+    pbc_vec = [Bool(val) for val in pbc]
+
+    return species_vec, positions_vec, cell_mat, pbc_vec
 end
 
 # Direct call interface - compute everything and return dict
@@ -280,88 +324,74 @@ AtomsCalculators.forces(calc::KIMCalculator, system) =
 
 # Internal evaluation
 @inline function _evaluate_system(calc::KIMCalculator, system)
-    # Handle different AtomsBase system types
-    local species::Vector{String}, positions::Vector{SVector{3,Float64}}, cell::Matrix{Float64}, pbc::Vector{Bool}
+    species, positions = _extract_particles(system)
+    cell = _extract_cell(system)
+    pbc = _extract_pbc(system)
+    return calc(species, positions, cell, pbc)
+end
 
+@inline function _extract_particles(system)
     if hasfield(typeof(system), :particles)
-        # FlexibleSystem - extract from particles
-        n_particles = length(system.particles)
-        species = Vector{String}(undef, n_particles)
-        positions = Vector{SVector{3,Float64}}(undef, n_particles)
-
-        @inbounds for (i, p) in enumerate(system.particles)
-            species[i] = String(p.first)
-            positions[i] = SVector{3,Float64}(_strip_units.(p.second))
-        end
-    else
-        # Try standard AtomsBase interface
-        try
-            raw_species = AtomsBase.chemical_symbols(system)
-            raw_positions = AtomsBase.positions(system)
-            n_particles = length(raw_species)
-
-            species = Vector{String}(undef, n_particles)
-            positions = Vector{SVector{3,Float64}}(undef, n_particles)
-
-            @inbounds for i in 1:n_particles
-                species[i] = String(raw_species[i])
-                positions[i] = SVector{3,Float64}(_strip_units.(raw_positions[i]))
-            end
-        catch
-            error("Cannot extract species and positions from system of type $(typeof(system))")
-        end
+        parts = getfield(system, :particles)
+        species = [String(first(p)) for p in parts]
+        positions = [_vec3(last(p)) for p in parts]
+        return species, positions
     end
 
-    # Handle cell matrix
     try
-        if hasmethod(AtomsBase.cell_vectors, Tuple{typeof(system)})
-            # Use cell_vectors if available
-            vecs = AtomsBase.cell_vectors(system)
-            cell = Matrix{Float64}(undef, 3, 3)
-            @inbounds for (j, v) in enumerate(vecs)
-                for i in 1:3
-                    cell[i, j] = Float64(_strip_units(v[i]))
-                end
-            end
-        else
-            # Fall back to cell matrix
-            raw_cell = AtomsBase.cell(system)
-            cell = Matrix{Float64}(undef, 3, 3)
-            @inbounds for i in 1:3, j in 1:3
-                cell[i, j] = Float64(_strip_units(raw_cell[i, j]))
-            end
-        end
+        raw_species = AtomsBase.chemical_symbols(system)
+        raw_positions = AtomsBase.positions(system)
+        species = [String(sp) for sp in raw_species]
+        positions = [_vec3(pos) for pos in raw_positions]
+        return species, positions
     catch
-        error("Cannot extract cell information from system of type $(typeof(system))")
+        error("Cannot extract species and positions from system of type $(typeof(system))")
     end
+end
 
-    # Get boundary conditions
-    try
-        if hasmethod(AtomsBase.periodicity, Tuple{typeof(system)})
-            raw_pbc = AtomsBase.periodicity(system)
-            pbc = Vector{Bool}(undef, 3)
-            @inbounds for i in 1:3
-                pbc[i] = Bool(raw_pbc[i])
-            end
-        elseif hasmethod(AtomsBase.boundary_conditions, Tuple{typeof(system)})
-            raw_pbc = AtomsBase.boundary_conditions(system)
-            pbc = Vector{Bool}(undef, 3)
-            @inbounds for i in 1:3
-                pbc[i] = Bool(raw_pbc[i])
-            end
-        else
-            pbc = Bool[false, false, false]  # Default to non-periodic
+@inline function _extract_cell(system)
+    if hasmethod(AtomsBase.cell_vectors, Tuple{typeof(system)})
+        return _matrix_from_vectors(AtomsBase.cell_vectors(system))
+    elseif hasmethod(AtomsBase.cell, Tuple{typeof(system)})
+        raw = AtomsBase.cell(system)
+        cell = Matrix{Float64}(undef, 3, 3)
+        @inbounds for i in 1:3, j in 1:3
+            cell[i, j] = Float64(_strip_units(raw[i, j]))
         end
-    catch
-        pbc = Bool[false, false, false]  # Default to non-periodic
+        return cell
     end
+    error("Cannot extract cell information from system of type $(typeof(system))")
+end
 
-    return calc.model_fn(species, positions, cell, pbc)
+@inline function _extract_pbc(system)
+    if hasmethod(AtomsBase.periodicity, Tuple{typeof(system)})
+        return [Bool(val) for val in AtomsBase.periodicity(system)]
+    elseif hasmethod(AtomsBase.boundary_conditions, Tuple{typeof(system)})
+        return [Bool(val) for val in AtomsBase.boundary_conditions(system)]
+    end
+    return Bool[false, false, false]
+end
+
+@inline function _matrix_from_vectors(vecs)
+    length(vecs) == 3 || throw(ArgumentError("expected 3 cell vectors, got $(length(vecs))"))
+    cell = Matrix{Float64}(undef, 3, 3)
+    @inbounds for (j, vec) in enumerate(vecs)
+        col = _vec3(vec)
+        for i in 1:3
+            cell[i, j] = col[i]
+        end
+    end
+    return cell
 end
 
 # Helper function to strip units
 @inline _strip_units(x::Quantity) = Float64(x.val)
 @inline _strip_units(x::Number) = Float64(x)
+
+@inline function _vec3(v)
+    length(v) == 3 || throw(ArgumentError("expected 3 components, got $(length(v))"))
+    return SVector{3, Float64}(ntuple(i -> Float64(_strip_units(v[i])), 3))
+end
 
 # Export high-level interface
 export KIMModel, KIMCalculator

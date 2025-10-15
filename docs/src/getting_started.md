@@ -58,7 +58,9 @@ positions = [
         SVector(1.3575, 1.3575, 1.3575),
 ]
 # Silicon lattice cell
-cell = Matrix([[0.0, 2.715, 2.715] [2.715, 0.0, 2.715] [2.715, 2.715, 0.0]])
+cell = Matrix([[0.0 2.715 2.715] 
+               [2.715 0.0 2.715] 
+               [2.715 2.715 0.0]])
 
 # Use periodic boundary conditions
 pbc = [true, true, true]
@@ -117,7 +119,7 @@ cu_results = cu_model(cu_species, cu_positions, cu_cell, cu_pbc)
 println("Copper energy: $(cu_results[:energy]) eV")
 ```
 ```
-Energy: 3.834811682114341 eV
+Copper energy: -13.120417106582778 eV
 ```
 
 ## Unit Systems

@@ -16,6 +16,7 @@ makedocs(
         "Adding KIM Support to Your Simulator" => "simulator_integration.md",
         "API Reference" => [
             "High-level Interface" => "api/highlevel.md",
+            "Library Management" => "api/libkim.md",
             "Model Management" => "api/model.md",
             "Species Handling" => "api/species.md",
             "Neighbor Lists" => "api/neighborlist.md",

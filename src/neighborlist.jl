@@ -225,7 +225,6 @@ function kim_neighbors_callback(
     end
 end
 
-
 """
     @cast_as_kim_neigh_fptr(func)
 Macro to create a C function pointer for KIM-API neighbor list callbacks.

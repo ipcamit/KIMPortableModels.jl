@@ -29,6 +29,7 @@ using LinearAlgebra
         @testset "Integration Tests" begin
             include("test_model_integration.jl")
             include("test_highlevel_integration.jl")
+            include("test_calculator_integration.jl")
         end
     end
 end

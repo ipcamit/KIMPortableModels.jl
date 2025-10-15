@@ -21,10 +21,11 @@ function scatter_add!(dst::AbstractArray, src::AbstractArray, idx::AbstractArray
             dst[idx[i]] += src[i]
         end
     else
+        nd = ndims(src)
         @inbounds for I in CartesianIndices(src)
-            inds = [I.I...]
-            inds[dims] = idx[I.I[dims]]
-            dst[inds...] += src[I]
+            dest_index =
+                CartesianIndex(ntuple(k -> k == dims ? idx[I[k]] : I[k], nd))
+            dst[dest_index] += src[I]
         end
     end
     return dst

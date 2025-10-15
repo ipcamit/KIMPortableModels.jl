@@ -97,6 +97,10 @@ atomsbase_result = calc(system)
 
 @assert raw_result[:energy] ≈ atomsbase_result[:energy]
 @assert raw_result[:forces] ≈ atomsbase_result[:forces]
+
+# Direct call on the calculator mirrors the model function
+direct_from_calc = calc.model_fn(species, positions, cell, pbc)
+@assert direct_from_calc == raw_result
 ```
 
 ## Interface Details
@@ -106,7 +110,7 @@ atomsbase_result = calc(system)
 The function returned by `KIMModel()` has the signature:
 
 ```julia
-f(species, positions, cell, pbc) -> Dict{Symbol, Any}
+f(species, positions, cell, pbc) -> NamedTuple
 ```
 
 **Parameters:**
@@ -116,7 +120,7 @@ f(species, positions, cell, pbc) -> Dict{Symbol, Any}
 - **`pbc::Vector{Bool}`**: Periodic boundary conditions `[x, y, z]`
 
 **Returns:**
-Dictionary with computed properties:
+Named tuple with computed properties:
 - **`:energy`**: Total potential energy (scalar)
 - **`:forces`**: Forces on each atom (3×N matrix)
 
@@ -126,7 +130,7 @@ Dictionary with computed properties:
 
 ```julia
 # Direct calculation (returns all computed properties)
-calc(system::AtomsBase.AbstractSystem) -> Dict{Symbol, Any}
+calc(system::AtomsBase.AbstractSystem) -> NamedTuple
 
 # AtomsCalculators interface
 AtomsCalculators.potential_energy(calc, system) -> Float64
@@ -142,6 +146,39 @@ AtomsCalculators.forces(calc, system) -> Matrix{Float64}
 - Extracts species symbols, positions, cell vectors, and boundary conditions
 - Strips units automatically (converts to base units)
 - Calls underlying `KIMModel` function
+
+## Example: AtomsBase System
+
+```julia
+using KIMPortableModels
+using StaticArrays, Unitful
+using AtomsBase: FlexibleSystem
+using AtomsCalculators
+
+# Build an AtomsBase system (silicon dimer in a box)
+particles = [
+    :Si => SVector(0.0u"Å", 0.0u"Å", 0.0u"Å"),
+    :Si => SVector(2.35u"Å", 0.0u"Å", 0.0u"Å"),
+]
+cell_vectors = (
+    SVector(10.0u"Å", 0.0u"Å", 0.0u"Å"),
+    SVector(0.0u"Å", 10.0u"Å", 0.0u"Å"),
+    SVector(0.0u"Å", 0.0u"Å", 10.0u"Å"),
+)
+system = FlexibleSystem(particles; cell_vectors = cell_vectors, periodicity = (true, true, true))
+
+# Create a calculator for the Stillinger–Weber silicon model
+calc = KIMCalculator("SW_StillingerWeber_1985_Si__MO_405512056662_006")
+
+# Use the AtomsCalculators API
+energy = AtomsCalculators.potential_energy(calc, system)
+forces = AtomsCalculators.forces(calc, system)
+
+# Or grab everything at once from the calculator call
+results = calc(system)
+@assert results[:energy] ≈ energy
+@assert results[:forces] ≈ forces
+```
 
 ## Error Handling
 
@@ -162,4 +199,3 @@ catch e
     println("Species error: ", e)
 end
 ```
-
