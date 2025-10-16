@@ -316,11 +316,17 @@ end
 (calc::KIMCalculator)(system) = _evaluate_system(calc, system)
 
 # AtomsCalculators interface
-AtomsCalculators.potential_energy(calc::KIMCalculator, system) =
+AtomsCalculators.potential_energy(calc::KIMCalculator, system; kwargs...) =
     _evaluate_system(calc, system)[:energy]
 
-AtomsCalculators.forces(calc::KIMCalculator, system) =
+AtomsCalculators.potential_energy(system, calc::KIMCalculator; kwargs...) =
+    AtomsCalculators.potential_energy(calc, system; kwargs...)
+
+AtomsCalculators.forces(calc::KIMCalculator, system; kwargs...) =
     _evaluate_system(calc, system)[:forces]
+
+AtomsCalculators.forces(system, calc::KIMCalculator; kwargs...) =
+    AtomsCalculators.forces(calc, system; kwargs...)
 
 # Internal evaluation
 @inline function _evaluate_system(calc::KIMCalculator, system)

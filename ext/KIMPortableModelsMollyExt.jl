@@ -27,6 +27,25 @@ using Unitful: Å, ustrip
     return (; species, positions, cell, pbc)
 end
 
+function AtomsCalculators.forces(
+    sys::Molly.System,
+    calc::KIMPortableModels.KIMCalculator;
+    kwargs...,
+)
+    inputs = _kim_inputs(sys)
+    results = calc(inputs.species, inputs.positions, inputs.cell, inputs.pbc)
+    fu = sys.force_units
+    forces = results[:forces]
+    n_atoms = size(forces, 2)
+    out = Vector{typeof(SVector{3, Float64}(0, 0, 0) * fu)}(undef, n_atoms)
+
+    @inbounds for (i, col) in enumerate(eachcol(forces))
+        out[i] = SVector{3, Float64}(col) * fu
+    end
+
+    return out
+end
+
 function AtomsCalculators.forces!(
     fs,
     sys::Molly.System,
