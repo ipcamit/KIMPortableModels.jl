@@ -1,80 +1,17 @@
+```@meta
+CurrentModule = KIMPortableModels
+DocTestSetup = quote
+    using KIMPortableModels
+end
+```
+
 # Species Handling
 
-Functions for managing chemical species in KIM-API.
+Helpers for mapping between species identifiers and the codes required by KIM-API models.
 
-## Types and Constants
-
-```@docs
-KIMPortableModels.SpeciesName
-KIMPortableModels.SpeciesSymbols
-KIMPortableModels.SpeciesToAtomicNumbers
-```
-
-## Basic Species Functions
-
-```@docs
-KIMPortableModels.get_species_number
-KIMPortableModels.get_species_symbol
-KIMPortableModels.species_name_known
-KIMPortableModels.species_name_equal
-KIMPortableModels.species_name_not_equal
-```
-
-## Model-Specific Species Functions
-
-```@docs
-KIMPortableModels.get_species_support_and_code
-KIMPortableModels.get_species_codes_from_model
-KIMPortableModels.get_unique_species_map
-KIMPortableModels.get_supported_species_map
-KIMPortableModels.get_species_map_closure
-```
-
-## Usage Examples
-
-### Basic Species Lookup
-
-```julia
-# Convert species string to KIM number
-si_number = get_species_number("Si")
-ar_number = get_species_number("Ar")
-
-# Convert back to string
-@assert get_species_symbol(si_number) == "Si"
-
-# Check if species is known
-@assert species_name_known(si_number) == true
-```
-
-### Model-Specific Species Handling
-
-```julia
-using KIMPortableModels
-
-# Create a model
-model = KIMPortableModels.KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006")
-
-# Get species codes for specific atoms
-species_strings = ["Si", "Si", "Si"]
-species_codes = get_species_codes_from_model(model, species_strings)
-
-# Create efficient species mapping
-species_map = get_unique_species_map(model, unique(species_strings))
-println("Si has code: ", species_map["Si"])
-
-# Create a reusable species mapper
-mapper = get_species_map_closure(model)
-codes = mapper(["Si", "Si"])  # Fast repeated mapping
-```
-
-### Error Handling
-
-```julia
-# This will throw an error if Cu is not supported by a Si-only model
-try
-    codes = get_species_codes_from_model(model, ["Cu"])
-catch e
-    println("Error: ", e)
-    # Handle unsupported species
-end
+```@autodocs
+Modules = [KIMPortableModels]
+Pages = ["species.jl"]
+Private = true
+Order = [:constant, :type, :function]
 ```

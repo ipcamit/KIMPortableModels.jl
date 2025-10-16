@@ -5,13 +5,13 @@ DocTestSetup = quote
 end
 ```
 
-# Neighbor Lists
+# Library Management
 
-Construction of neighbor lists and callback helpers bridging to the KIM-API.
+Utilities responsible for locating and loading the KIM-API shared library.
 
 ```@autodocs
 Modules = [KIMPortableModels]
-Pages = ["neighborlist.jl"]
+Pages = ["libkim.jl"]
 Private = true
-Order = [:macro, :type, :function]
+Order = [:function]
 ```
