@@ -1,5 +1,5 @@
-name = "KIMPortableModels"
-uuid = "110f5901-8789-45df-852c-04e9fda0ddd7"
+name = "KIMJulia"
+uuid = "00fa7f40-1ac7-4a84-9681-9f177278cec0"
 keywords = ["molecular-dynamics", "kim-api", "interatomic-potentials", "atomistic-simulations"]
 authors = ["Amit Gupta <gupta839@umn.edu>"]
 description = "Julia interface to the KIM-API (Knowledgebase of Interatomic Models) for molecular simulations"
@@ -21,7 +21,7 @@ Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 Molly = "aa0f7f06-fcc0-5ec4-a7f3-a573f33f9c4c"
 
 [extensions]
-KIMPortableModelsMollyExt = "Molly"
+KIMJuliaMollyExt = "Molly"
 
 [compat]
 AtomsBase = "0.5"

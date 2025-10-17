@@ -1,7 +1,7 @@
 ```@meta
-CurrentModule = KIMPortableModels
+CurrentModule = KIMJulia
 DocTestSetup = quote
-    using KIMPortableModels
+    using KIMJulia
 end
 ```
 
@@ -10,7 +10,7 @@ end
 High-level helpers for constructing callable model wrappers and AtomsCalculators bridges.
 
 ```@autodocs
-Modules = [KIMPortableModels]
+Modules = [KIMJulia]
 Pages = ["highlevel.jl"]
 Order = [:type, :function]
 ```
