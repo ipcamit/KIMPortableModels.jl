@@ -1,7 +1,7 @@
 ```@meta
-CurrentModule = KIMPortableModels
+CurrentModule = KIMJulia
 DocTestSetup = quote
-    using KIMPortableModels
+    using KIMJulia
 end
 ```
 
@@ -10,7 +10,7 @@ end
 Helpers for mapping between species identifiers and the codes required by KIM-API models.
 
 ```@autodocs
-Modules = [KIMPortableModels]
+Modules = [KIMJulia]
 Pages = ["species.jl"]
 Private = true
 Order = [:constant, :type, :function]

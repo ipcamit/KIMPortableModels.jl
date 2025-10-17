@@ -1,13 +1,13 @@
 # Examples
 
-This page provides practical examples of using KIMPortableModels.jl for various molecular simulation tasks.
+This page provides practical examples of using KIMJulia.jl for various molecular simulation tasks.
 
 ## Basic Examples
 
 ### Computing Energy and Forces with KIMModel
 
 ```julia
-using KIMPortableModels
+using KIMJulia
 using StaticArrays
 using LinearAlgebra
 
@@ -36,7 +36,7 @@ println("Force on atom 2: $(results[:forces][:, 2]) eV/Å")
 ### Using AtomsBase and AtomsCalculators
 
 ```julia
-using KIMPortableModels, AtomsBase, AtomsCalculators
+using KIMJulia, AtomsBase, AtomsCalculators
 using StaticArrays, Unitful
 
 # Create a KIM calculator
@@ -71,11 +71,11 @@ println("All results: $(results)")
 ### Energy Minimization
 
 ```julia
-using KIMPortableModels, Optim
+using KIMJulia, Optim
 using StaticArrays, LinearAlgebra
 
 # Set up model and initial structure
-model = KIMPortableModels.KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006")
+model = KIMJulia.KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006")
 species = ["Si", "Si"]
 cell = [5.43 0.0 0.0; 0.0 5.43 0.0; 0.0 0.0 5.43]
 pbc = [true, true, true]
@@ -102,7 +102,7 @@ println("Minimum energy: ", result.minimum)
 This example demonstrates that `KIMModel` (raw arrays) and `KIMCalculator` (AtomsBase) produce identical results:
 
 ```julia
-using KIMPortableModels, AtomsBase, StaticArrays
+using KIMJulia, AtomsBase, StaticArrays
 
 model_name = "SW_StillingerWeber_1985_Si__MO_405512056662_006"
 
@@ -140,7 +140,7 @@ println("Energy: $(raw_results[:energy]) eV")
 ### Different Unit Systems
 
 ```julia
-using KIMPortableModels, StaticArrays, LinearAlgebra
+using KIMJulia, StaticArrays, LinearAlgebra
 
 model_name = "SW_StillingerWeber_1985_Si__MO_405512056662_006"
 species = ["Si", "Si"]

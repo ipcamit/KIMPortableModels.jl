@@ -1,19 +1,19 @@
 # Adding KIM Support to Your Simulator
 
-This guide provides step-by-step instructions for integrating KIMPortableModels.jl into your Julia-based molecular dynamics simulator or computational physics code.
+This guide provides step-by-step instructions for integrating KIMJulia.jl into your Julia-based molecular dynamics simulator or computational physics code.
 
 ## Overview
 
-KIMPortableModels.jl provides a high-level interface that makes it easy to add support for hundreds of validated interatomic models to your simulator. The integration requires minimal code changes and follows Julia best practices.
+KIMJulia.jl provides a high-level interface that makes it easy to add support for hundreds of validated interatomic models to your simulator. The integration requires minimal code changes and follows Julia best practices.
 
 ## Quick Integration Steps
 
-### 1. Basic Integration Pattern Using highlevel functions provided by KIMPortableModels.jl
+### 1. Basic Integration Pattern Using highlevel functions provided by KIMJulia.jl
 
 Here's the minimal code pattern for adding KIM model support to your simulator:
 
 ```julia
-using KIMPortableModels
+using KIMJulia
 using StaticArrays
 using LinearAlgebra
 
@@ -21,7 +21,7 @@ using LinearAlgebra
 function simulate_system(positions, species, cell, pbc, model_name; timesteps=1000, dt=0.001)
 
     # Initialize KIM model (do this once)
-    kim_model = KIMPortableModels.KIMModel(model_name)
+    kim_model = KIMJulia.KIMModel(model_name)
 
     # Your simulation loop
     for step in 1:timesteps
@@ -68,16 +68,16 @@ For more performant/fine-grained control, you can use the low-level API directly
 Here's how to initialize and use KIM models directly with the low-level interface:
 
 ```julia
-using KIMPortableModels
+using KIMJulia
 
 # 1. Create model with specific units
-model, accepted = KIMPortableModels.create_model(
-    KIMPortableModels.zeroBased,  # Use 0-based indexing
-    KIMPortableModels.A,          # Angstrom
-    KIMPortableModels.eV,         # Electron volt
-    KIMPortableModels.e,          # Elementary charge
-    KIMPortableModels.K,          # Kelvin
-    KIMPortableModels.ps,         # Picosecond
+model, accepted = KIMJulia.create_model(
+    KIMJulia.zeroBased,  # Use 0-based indexing
+    KIMJulia.A,          # Angstrom
+    KIMJulia.eV,         # Electron volt
+    KIMJulia.e,          # Elementary charge
+    KIMJulia.K,          # Kelvin
+    KIMJulia.ps,         # Picosecond
     "SW_StillingerWeber_1985_Si__MO_405512056662_006"
 )
 
@@ -86,11 +86,11 @@ if !accepted
 end
 
 # 2. Create compute arguments
-args = KIMPortableModels.create_compute_arguments(model)
+args = KIMJulia.create_compute_arguments(model)
 
 # 3. Check what the model supports
-energy_support = KIMPortableModels.get_argument_support_status(args, KIMPortableModels.partialEnergy)
-forces_support = KIMPortableModels.get_argument_support_status(args, KIMPortableModels.partialForces)
+energy_support = KIMJulia.get_argument_support_status(args, KIMJulia.partialEnergy)
+forces_support = KIMJulia.get_argument_support_status(args, KIMJulia.partialForces)
 
 # 4. Set up data arrays
 n_atoms = 2
@@ -102,22 +102,22 @@ energy_ref = Ref{Float64}(0.0)
 forces = zeros(Float64, 3, n_atoms)
 
 # 5. Set argument pointers
-KIMPortableModels.set_argument_pointer!(args, KIMPortableModels.numberOfParticles, n_ref)
-KIMPortableModels.set_argument_pointer!(args, KIMPortableModels.particleSpeciesCodes, species_codes)
-KIMPortableModels.set_argument_pointer!(args, KIMPortableModels.coordinates, coords)
-KIMPortableModels.set_argument_pointer!(args, KIMPortableModels.particleContributing, contributing)
-KIMPortableModels.set_argument_pointer!(args, KIMPortableModels.partialEnergy, energy_ref)
-KIMPortableModels.set_argument_pointer!(args, KIMPortableModels.partialForces, forces)
+KIMJulia.set_argument_pointer!(args, KIMJulia.numberOfParticles, n_ref)
+KIMJulia.set_argument_pointer!(args, KIMJulia.particleSpeciesCodes, species_codes)
+KIMJulia.set_argument_pointer!(args, KIMJulia.coordinates, coords)
+KIMJulia.set_argument_pointer!(args, KIMJulia.particleContributing, contributing)
+KIMJulia.set_argument_pointer!(args, KIMJulia.partialEnergy, energy_ref)
+KIMJulia.set_argument_pointer!(args, KIMJulia.partialForces, forces)
 
 # 6. Compute energy and forces
-KIMPortableModels.compute!(model, args)
+KIMJulia.compute!(model, args)
 
 println("Energy: $(energy_ref[]) eV")
 println("Forces: $forces")
 
 # 7. Clean up (optional - handled by finalizers)
-KIMPortableModels.destroy_compute_arguments!(model, args)
-KIMPortableModels.destroy_model!(model)
+KIMJulia.destroy_compute_arguments!(model, args)
+KIMJulia.destroy_model!(model)
 ```
 
 ### Neighbor Lists
@@ -126,27 +126,27 @@ KIM models that require neighbor lists need special handling. Here's how to set 
 
 ```julia
 # Get neighbor list requirements from model
-n_cutoffs, cutoffs, will_not_request = KIMPortableModels.get_neighbor_list_pointers(model)
+n_cutoffs, cutoffs, will_not_request = KIMJulia.get_neighbor_list_pointers(model)
 
 if n_cutoffs > 0
     println("Model requires $n_cutoffs neighbor lists with cutoffs: $cutoffs")
 
     # Create neighbor lists using KIMNeighborList.jl
     nl_handle, all_coords, all_species, contributing, atom_indices =
-        KIMPortableModels.create_kim_neighborlists(
+        KIMJulia.create_kim_neighborlists(
             species, positions, cell, pbc, cutoffs;
             will_not_request_ghost_neigh = will_not_request
         )
 
     # Set up neighbor list callback
     GC.@preserve nl_handle all_coords begin
-        callback_ptr = @cast_as_kim_neigh_fptr(KIMPortableModels.kim_neighbors_callback)
+        callback_ptr = @cast_as_kim_neigh_fptr(KIMJulia.kim_neighbors_callback)
         data_ptr = pointer_from_objref(nl_handle)
-        KIMPortableModels.set_callback_pointer!(args, KIMPortableModels.GetNeighborList,
-                                               KIMPortableModels.c, callback_ptr, data_ptr)
+        KIMJulia.set_callback_pointer!(args, KIMJulia.GetNeighborList,
+                                               KIMJulia.c, callback_ptr, data_ptr)
 
         # Now compute with neighbor lists
-        KIMPortableModels.compute!(model, args)
+        KIMJulia.compute!(model, args)
     end
 end
 ```

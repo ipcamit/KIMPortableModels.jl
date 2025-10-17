@@ -1,7 +1,7 @@
 ```@meta
-CurrentModule = KIMPortableModels
+CurrentModule = KIMJulia
 DocTestSetup = quote
-    using KIMPortableModels
+    using KIMJulia
 end
 ```
 
@@ -10,7 +10,7 @@ end
 Construction of neighbor lists and callback helpers bridging to the KIM-API.
 
 ```@autodocs
-Modules = [KIMPortableModels]
+Modules = [KIMJulia]
 Pages = ["neighborlist.jl"]
 Private = true
 Order = [:macro, :type, :function]

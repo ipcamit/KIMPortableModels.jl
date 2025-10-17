@@ -1,7 +1,7 @@
 ```@meta
-CurrentModule = KIMPortableModels
+CurrentModule = KIMJulia
 DocTestSetup = quote
-    using KIMPortableModels
+    using KIMJulia
 end
 ```
 
@@ -10,7 +10,7 @@ end
 Numerical helper routines shared across the high-level and low-level interfaces.
 
 ```@autodocs
-Modules = [KIMPortableModels]
+Modules = [KIMJulia]
 Pages = ["utils.jl"]
 Private = true
 Order = [:function]

@@ -1,14 +1,14 @@
-# KIMPortableModels.jl
+# KIMJulia.jl
 
 ![logo](./assets/logo.png)
 
 ```@docs
-KIMPortableModels.KIMPortableModels
+KIMJulia.KIMJulia
 ```
 
 ## Overview
 
-KIMPortableModels.jl provides both low-level and high-level interfaces to KIM-API, enabling Julia users to access the extensive collection of validated interatomic models available through the OpenKIM framework. Main purpose of this package is to provide a convenient way to integrate KIM models into Julia based MD simulators. Think of this as the Julia equivalent of the KIMPY package but with additional wrappers for ease of use.
+KIMJulia.jl provides both low-level and high-level interfaces to KIM-API, enabling Julia users to access the extensive collection of validated interatomic models available through the OpenKIM framework. Main purpose of this package is to provide a convenient way to integrate KIM models into Julia based MD simulators. Think of this as the Julia equivalent of the KIMPY package but with additional wrappers for ease of use.
 
 ### Features
 
@@ -22,10 +22,10 @@ KIMPortableModels.jl provides both low-level and high-level interfaces to KIM-AP
 
 ```julia
 
-using KIMPortableModels, StaticArrays, LinearAlgebra
+using KIMJulia, StaticArrays, LinearAlgebra
 
 # Create model function
-model = KIMPortableModels.KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006")
+model = KIMJulia.KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006")
 
 # Define system
 species = ["Si", "Si"]
@@ -64,14 +64,14 @@ FOr latest version:
 
 ```julia
 using Pkg
-Pkg.add(url="https://github.com/ipcamit/KIMPortableModels.jl.git")
+Pkg.add(url="https://github.com/ipcamit/KIMJulia.jl.git")
 ```
 
 or
 
 ```julia
 using Pkg
-Pkg.add("KIMPortableModels")
+Pkg.add("KIMJulia")
 ```
 ### Environment Setup
 
@@ -83,7 +83,7 @@ export KIM_API_LIB="/path/to/libkim-api.so"
 
 ## Supported Unit Systems
 
-KIMPortableModels.jl supports multiple unit systems commonly used in molecular dynamics:
+KIMJulia.jl supports multiple unit systems commonly used in molecular dynamics:
 
 | System     | Length   | Energy     | Charge | Temperature | Time |
 |------------|----------|------------|--------|-------------|------|
@@ -96,8 +96,8 @@ KIMPortableModels.jl supports multiple unit systems commonly used in molecular d
 You can also specify custom units by passing a named tuple of units during model creation:
 
 ```julia
-custom_units = (length=KIMPortableModels.A, energy=KIMPortableModels.eV, time=KIMPortableModels.fs, charge=KIMPortableModels.e, temperature=KIMPortableModels.K)
-model_custom = KIMPortableModels.KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006",
+custom_units = (length=KIMJulia.A, energy=KIMJulia.eV, time=KIMJulia.fs, charge=KIMJulia.e, temperature=KIMJulia.K)
+model_custom = KIMJulia.KIMModel("SW_StillingerWeber_1985_Si__MO_405512056662_006",
                                  units=custom_units)
 ```
 
@@ -118,7 +118,7 @@ The package is organized into several modules:
 
 ## Performance
 
-KIMPortableModels.jl is designed for high performance:
+KIMJulia.jl is designed for high performance:
 
 - Pre-computed species mappings minimize lookup overhead
 - Efficient neighbor list generation using NeighbourLists.jl
@@ -145,7 +145,7 @@ Consider citing the original KIM-API paper:
 
 ## License
 
-KIMPortableModels.jl is released under the MIT License. See the LICENSE file for details.
+KIMJulia.jl is released under the MIT License. See the LICENSE file for details.
 
 ## Acknowledgments
 
